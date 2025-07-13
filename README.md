@@ -1,36 +1,61 @@
 # Icon Management - Figma Plugin
 
-A powerful Figma plugin for discovering, organizing, and managing design system icons across your Figma files.
+*A design systems approach to icon organisation and consistency*
+
+## 🧠 The Design Challenge
+
+As design systems mature and teams scale, icon management becomes increasingly complex. Through years of working with enterprise design systems, I've observed recurring challenges that significantly impact design velocity and consistency:
+
+### The Problem Space
+- **Icon proliferation**: Teams create duplicate icons across pages, leading to inconsistency
+- **Discovery friction**: Designers struggle to find existing icons, resulting in unnecessary recreation
+- **Maintenance overhead**: Without proper organisation, icon libraries become unwieldy
+- **Consistency gaps**: Similar icons with slight variations create visual discord
+- **Process inefficiency**: Manual icon audits are time-consuming and error-prone
+
+### The Hypothesis
+*If we can provide intelligent icon detection and automated organisation tools, designers will maintain more consistent icon libraries whilst reducing the cognitive load of icon management.*
+
+### The Design Approach
+This plugin addresses the icon management challenge through three core principles:
+
+1. **Intelligent Detection**: AI-powered scanning that understands design patterns and icon characteristics
+2. **Automated Organisation**: Bulk operations that reduce manual effort whilst maintaining design intent
+3. **Contextual Insights**: Clear visibility into icon usage, inconsistencies, and opportunities for consolidation
+
+The solution prioritises designer workflow efficiency whilst ensuring design system integrity.
+
+---
 
 ## ✨ Features
 
-### 🔍 Smart Icon Detection
-- **AI-powered detection** of icons across your entire Figma file
+### 🔍 Intelligent Icon Detection
+- **Pattern-based recognition** across your entire Figma file
 - Detects **components**, **component sets**, **instances**, and **unresolved icons**
 - **Archive page filtering** - automatically excludes archived content
-- **Performance optimized** for large files (up to 50 pages)
+- **Performance optimised** for large files (up to 50 pages)
 
-### 📊 Icon Organization
+### 📊 Icon Organisation & Analysis
 - **Master component tracking** with instance counts
 - **Component set support** with variant detection
-- **Inconsistency analysis** to identify duplicate or problematic icons
+- **Inconsistency analysis** to identify duplicates or problematic icons
 - **Source identification** for library icons (Lucide, Heroicons, etc.)
 
 ### 🔧 Bulk Operations
 - **Auto-create components** from unresolved icons
-- **Batch export** to organized ZIP files with metadata
+- **Batch export** to organised ZIP files with metadata
 - **Icon replacement** with intelligent matching
 - **Context menus** for quick actions (right-click functionality)
 
-### 🎨 Enhanced UI/UX
+### 🎨 Enhanced UX
 - **Lazy loading** for optimal performance
-- **White background detection** with automatic gray backgrounds
+- **White background detection** with automatic grey backgrounds
 - **Rounded dimensions** display (removes decimals)
 - **Grid and list views** for icon browsing
 - **Search and filtering** capabilities
 
 ### 📤 Export System
-- **ZIP file exports** with organized folder structure
+- **ZIP file exports** with organised folder structure
 - **Summary reports** with project details and branding
 - **SVG format** with proper naming conventions
 - **Metadata preservation** including source page information
@@ -61,8 +86,8 @@ A powerful Figma plugin for discovering, organizing, and managing design system 
 ### Getting Started
 1. **Open the plugin** in your Figma file
 2. **Click "Scan for icons"** to discover all icons
-3. **Review the results** in the organized dashboard
-4. **Use bulk operations** to clean up and organize your icons
+3. **Review the results** in the organised dashboard
+4. **Use bulk operations** to clean up and organise your icons
 
 ### Key Actions
 - **Right-click any icon** for context menu options
@@ -77,7 +102,7 @@ A powerful Figma plugin for discovering, organizing, and managing design system 
 - **Lazy loading** ensures smooth performance with many icons
 - **Performance warnings** appear for very large icon sets
 
-## 📝 Technical Details
+## 📝 Technical Implementation
 
 ### Built With
 - **TypeScript** for type safety and better development experience
@@ -85,11 +110,11 @@ A powerful Figma plugin for discovering, organizing, and managing design system 
 - **Figma Plugin API** for seamless integration
 - **JSZip** for export functionality
 
-### Performance Optimizations
+### Performance Optimisations
 - **Lazy loading** for variant previews
 - **Pagination limits** to prevent memory issues
 - **Debounced operations** for smooth user experience
-- **Optimized scanning** with intelligent filtering
+- **Optimised scanning** with intelligent filtering
 
 ### Supported Icon Types
 - ✅ **Components** (master icons)
@@ -175,11 +200,11 @@ icons-export.zip
 4. Test thoroughly
 5. Submit a pull request
 
-## 📄 License
+## 📄 Licence
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT Licence - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## 🙏 Acknowledgements
 
 - Built with the [Figma Plugin API](https://www.figma.com/plugin-docs/)
 - Icons from [Lucide](https://lucide.dev/) for UI elements
