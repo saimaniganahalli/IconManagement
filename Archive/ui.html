@@ -1,0 +1,4354 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Icon Management</title>
+    
+    <!-- Hotjar Tracking Code for Icon Management Plugin -->
+    <script>
+        (function(h,o,t,j,a,r){
+            h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
+            h._hjSettings={hjid:3861234,hjsv:6}; // Replace with your actual Hotjar ID
+            a=o.getElementsByTagName('head')[0];
+            r=o.createElement('script');r.async=1;
+            r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
+            a.appendChild(r);
+        })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
+    </script>
+
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script> <!-- Replace with your GA4 ID -->
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-XXXXXXXXXX'); // Replace with your GA4 ID
+    </script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #1d1d1d;
+            background: #ffffff;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            width: 600px;
+            height: 650px;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+        }
+
+        /* Header - Lucide-inspired minimal design */
+        .header {
+            padding: 20px;
+            background: #ffffff;
+        }
+
+        .search-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .quick-filters {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .filter-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #666;
+            margin-right: 4px;
+        }
+
+        .filter-chip {
+            padding: 8px 14px;
+            background: #f8f9fa;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.2s;
+            white-space: nowrap;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .filter-chip:hover {
+            background: #f0f0f0;
+            border-color: rgba(0, 0, 0, 0.15);
+        }
+
+        .filter-chip.active {
+            background: #000000;
+            color: white;
+            border-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .current-page-name {
+            color: inherit;
+            font-weight: 500;
+        }
+
+        .filter-summary {
+            font-size: 12px;
+            color: #999;
+            margin-left: auto;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .filter-summary:hover {
+            color: #666;
+        }
+
+        .settings-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            color: #666;
+            transition: all 0.2s;
+            margin-left: 8px;
+        }
+
+        .settings-button:hover {
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            background: #ffffff;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: #000000;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .add-button {
+            padding: 10px 16px;
+            background: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            white-space: nowrap;
+        }
+
+        .add-button:hover {
+            background: #0052a3;
+        }
+
+        .add-button:disabled {
+            background: #d4d4d4;
+            cursor: not-allowed;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 4px;
+        }
+
+        .view-button {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            font-size: 13px;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.2s;
+            border-radius: 6px;
+        }
+
+        .view-button:hover {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .view-button.active {
+            background: #f0f0f0;
+            color: #000;
+            font-weight: 500;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            padding: 12px 0;
+            background: #f0f8ff;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-size: 11px;
+            color: #666;
+            display: none;
+            text-align: center;
+        }
+
+        .status-bar.show {
+            display: block;
+        }
+
+        .status-bar.error {
+            background: #fff5f5;
+            color: #d73a49;
+        }
+
+        .status-bar.success {
+            background: #f0fff4;
+            color: #28a745;
+        }
+
+        .status-bar.warning {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        /* Main Content */
+        .content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Icon Grid */
+        .icon-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            min-height: 0; /* Allow flex child to shrink */
+            background: #ffffff;
+        }
+
+        /* Better split view when details panel is open */
+        .content.with-details .icon-area {
+            flex: 1;
+            padding: 16px 12px 20px 20px; /* Reduced right padding for more space */
+            max-height: 100%;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            margin-top: 60px;
+        }
+
+        .empty-state h3 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: #666;
+        }
+
+        .empty-state p {
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 8px;
+        }
+        
+        /* Adjust grid spacing in split view for better density */
+        .content.with-details .icon-grid {
+            grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+            gap: 6px;
+        }
+
+        /* Page sections */
+        .page-section {
+            margin-bottom: 24px;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 0 12px 0;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s ease;
+        }
+        
+        .page-header:hover {
+            background-color: #f8f9fa;
+        }
+
+        .page-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .page-count {
+            font-size: 12px;
+            color: #666;
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+
+        .page-toggle {
+            font-size: 14px;
+            color: #666;
+            transition: transform 0.2s ease;
+            font-weight: bold;
+        }
+
+        .page-section.collapsed .page-toggle {
+            transform: rotate(-90deg);
+        }
+
+        .page-section.collapsed .page-content {
+            display: none;
+        }
+
+        .page-content {
+            transition: all 0.2s ease;
+        }
+
+        .icon-slot {
+            width: 60px;
+            height: 60px;
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: #ffffff;
+            transition: all 0.2s;
+        }
+        
+        /* Optimize icon slots in split view */
+        .content.with-details .icon-slot {
+            width: 56px;
+            height: 56px;
+            border-radius: 6px;
+        }
+
+        .icon-slot:hover {
+            border-color: #e0e0e0;
+            background: #fafafa;
+        }
+
+        .icon-slot.filled {
+            border: 1px solid #f0f0f0;
+            background: #ffffff;
+        }
+
+        .icon-slot.filled:hover {
+            border-color: #000000;
+        }
+
+        .icon-slot.selected {
+            border-color: #000000;
+            background: #f8f9fa;
+        }
+
+        /* Status indicators - minimal dots instead of borders */
+        .icon-slot.status-unresolved::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 6px;
+            height: 6px;
+            background: #f59e0b;
+            border-radius: 50%;
+        }
+
+        .icon-slot.status-instance::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 6px;
+            height: 6px;
+            background: #8b5cf6;
+            border-radius: 50%;
+        }
+
+        .icon-slot.status-master::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 6px;
+            height: 6px;
+            background: #10b981;
+            border-radius: 50%;
+        }
+
+        /* Tags for new and duplicate icons */
+        .icon-slot {
+            position: relative;
+        }
+
+        .icon-tag {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #dc2626;
+            color: white;
+            font-size: 8px;
+            font-weight: 600;
+            padding: 2px 4px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            z-index: 10;
+        }
+
+        .icon-tag.new {
+            background: #0066cc;
+        }
+
+        .icon-tag.duplicate {
+            background: #f59e0b;
+            color: #000;
+        }
+
+        /* Stack multiple tags */
+        .icon-tag + .icon-tag {
+            right: -6px;
+            top: 8px;
+        }
+
+        /* Status legend */
+        .status-legend {
+            padding: 12px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 12px;
+            display: none;
+        }
+
+        .status-legend.show {
+            display: block;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 20px;
+            margin-bottom: 4px;
+            color: #666;
+        }
+
+        .legend-color {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .legend-color.orange { background-color: #f59e0b; }
+        .legend-color.purple { background-color: #8b5cf6; }
+        .legend-color.green { background-color: #10b981; }
+        
+        /* Hover tooltip */
+        .icon-slot {
+            position: relative;
+        }
+
+        .icon-slot .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1d1d1d;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            z-index: 1000;
+            margin-bottom: 4px;
+        }
+
+        .icon-slot:hover .tooltip {
+            opacity: 1;
+        }
+
+        .add-icon-slot {
+            color: #999;
+            font-size: 20px;
+        }
+
+        /* Icon Details Panel */
+        .details-panel {
+            width: 260px; /* Slightly narrower for better proportions */
+            border-left: 1px solid #e5e5e5;
+            background: #fafbfc; /* Subtle background difference */
+            padding: 20px 16px 20px 20px; /* Optimized padding */
+            overflow-y: auto;
+            display: none;
+            flex-shrink: 0; /* Don't shrink */
+            height: 100%; /* Take full height */
+            box-shadow: -2px 0 8px rgba(0, 0, 0, 0.02); /* Subtle depth */
+        }
+
+        .details-panel.show {
+            display: block;
+        }
+
+        .icon-name {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1d1d1d;
+            line-height: 1.3;
+            word-break: break-word; /* Handle long names gracefully */
+        }
+        
+        /* Details panel header styling */
+        .details-panel .close-button {
+            background: rgba(0, 0, 0, 0.05);
+            border: none;
+            border-radius: 6px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #666;
+            font-size: 14px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        
+        .details-panel .close-button:hover {
+            background: rgba(0, 0, 0, 0.1);
+            color: #333;
+        }
+
+        .icon-actions {
+            margin-bottom: 16px;
+        }
+
+        .swap-button {
+            padding: 10px 16px; /* Slightly larger for better touch target */
+            background: #0066cc;
+            color: white;
+            border: 1px solid #0066cc;
+            border-radius: 6px;
+            font-size: 12px; /* Slightly larger text */
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            width: 100%; /* Full width for better visual balance */
+            box-shadow: 0 1px 3px rgba(0, 102, 204, 0.2);
+        }
+
+        .swap-button:hover {
+            background: #0052a3;
+            border-color: #0052a3;
+        }
+
+        .swap-button:active {
+            transform: translateY(1px);
+        }
+
+        .swap-button:disabled {
+            background: #f5f5f5;
+            color: #ccc;
+            cursor: not-allowed;
+            border-color: #e5e5e5;
+        }
+
+        .icon-status {
+            margin-bottom: 16px;
+            padding: 8px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 3px;
+            font-size: 11px;
+            color: #856404;
+        }
+
+        .icon-status a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        .icon-status a:hover {
+            text-decoration: underline;
+        }
+
+        .icon-status.master-status {
+            background: #f0fff4;
+            border-color: #10b981;
+            color: #047857;
+        }
+
+        .icon-status.instance-status {
+            background: #faf5ff;
+            border-color: #8b5cf6;
+            color: #7c3aed;
+        }
+
+        .icon-status.unresolved-status {
+            background: #fffbeb;
+            border-color: #f59e0b;
+            color: #d97706;
+        }
+
+        .icon-preview {
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .preview-box {
+            width: 100px;
+            height: 100px;
+            border: 1px dashed #d4d4d4;
+            border-radius: 8px;
+            margin: 0 auto 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .icon-size {
+            font-size: 10px;
+            color: #999;
+        }
+
+        .icon-info {
+            border-top: 1px solid #e6e6e6;
+            padding-top: 12px;
+        }
+
+        .info-item {
+            margin-bottom: 10px; /* Slightly more space */
+        }
+
+        .info-item:last-child {
+            margin-bottom: 0; /* Remove bottom margin from last item */
+        }
+
+        .info-label {
+            font-size: 10px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px; /* Slightly more space */
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-size: 11px;
+            color: #1d1d1d;
+            line-height: 1.3;
+            word-break: break-word; /* Handle long values gracefully */
+        }
+
+        /* Progress Indicator */
+        .progress {
+            height: 2px;
+            background: #e6e6e6;
+            margin: 16px 0 0 0;
+            display: none;
+        }
+
+        .progress.show {
+            display: block;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #0066cc;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Scan Results */
+        .scan-results {
+            padding: 0 20px 20px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+            display: none;
+        }
+
+        .scan-results.show {
+            display: block;
+        }
+
+        .result-stats {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .stat {
+            color: #666;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #000;
+            margin-right: 4px;
+        }
+
+        .scan-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-button {
+            padding: 10px 16px;
+            background: #f8f9fa;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .action-button:hover {
+            background: #f0f0f0;
+            border-color: rgba(0, 0, 0, 0.15);
+        }
+
+        .action-button.primary {
+            background: #000000;
+            color: white;
+            border-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .action-button.primary:hover {
+            background: #333333;
+            border-color: rgba(0, 0, 0, 0.3);
+        }
+
+        .action-button:disabled {
+            background: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+            border-color: rgba(0, 0, 0, 0.05);
+        }
+
+        /* List View */
+        .icon-list {
+            display: none;
+        }
+
+        .icon-list.show {
+            display: block;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+
+        .list-item:hover {
+            background: #f8f9fa;
+        }
+
+        .list-item.selected {
+            background: #f0f8ff;
+            border-color: #0066cc;
+        }
+
+        .list-icon {
+            width: 24px;
+            height: 24px;
+            border: 1px solid #e6e6e6;
+            border-radius: 2px;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        .list-name {
+            font-size: 12px;
+            color: #1d1d1d;
+        }
+
+        /* Keyboard Focus */
+        .search-input:focus,
+        .add-button:focus,
+        .view-button:focus,
+        .swap-button:focus,
+        .action-button:focus {
+            outline: 2px solid #0066cc;
+            outline-offset: 1px;
+        }
+
+        /* Confirmation Dialog */
+        .dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .dialog-overlay.show {
+            display: flex;
+        }
+
+        .dialog {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            width: 480px;
+            max-width: 90vw;
+            max-height: 80vh;
+            overflow: hidden;
+        }
+
+        .dialog-header {
+            padding: 24px 24px 16px 24px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .dialog-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1d1d1d;
+            margin-bottom: 8px;
+        }
+
+        .dialog-subtitle {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .dialog-content {
+            padding: 20px 24px;
+        }
+
+        .scope-options {
+            margin-bottom: 20px;
+        }
+
+        .scope-option {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .scope-option:hover {
+            border-color: #000000;
+            background: #f8f9fa;
+        }
+
+        .scope-option.selected {
+            border-color: #000000;
+            background: #f0f8ff;
+        }
+
+        .scope-radio {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e5e5e5;
+            border-radius: 50%;
+            margin-right: 12px;
+            margin-top: 2px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .scope-option.selected .scope-radio {
+            border-color: #000000;
+            background: #000000;
+            position: relative;
+        }
+
+        .scope-option.selected .scope-radio::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .scope-info {
+            flex: 1;
+        }
+
+        .scope-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1d1d1d;
+            margin-bottom: 4px;
+        }
+
+        .scope-description {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .impact-summary {
+            background: #f8f9fa;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .impact-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1d1d1d;
+            margin-bottom: 8px;
+        }
+
+        .impact-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+        }
+
+        .impact-stat {
+            color: #666;
+        }
+
+        .impact-value {
+            font-weight: 600;
+            color: #000;
+        }
+
+        .dialog-actions {
+            padding: 16px 24px 24px 24px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .dialog-button {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .dialog-button.secondary {
+            background: #f8f9fa;
+            color: #666;
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .dialog-button.secondary:hover {
+            background: #f0f0f0;
+            border-color: rgba(0, 0, 0, 0.15);
+        }
+
+        .dialog-button.primary {
+            background: #000000;
+            color: white;
+            border-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .dialog-button.primary:hover {
+            background: #333333;
+        }
+
+        .dialog-button:disabled {
+            background: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+            border-color: rgba(0, 0, 0, 0.05);
+        }
+
+        /* Success Dialog */
+        .success-dialog {
+            background: #f0fff4;
+            border: 1px solid #10b981;
+        }
+
+        .success-dialog .dialog-header {
+            border-bottom-color: #d1fae5;
+        }
+
+        .success-dialog .dialog-title {
+            color: #065f46;
+        }
+
+        .success-dialog .dialog-subtitle {
+            color: #059669;
+        }
+
+        .refresh-prompt {
+            background: #ffffff;
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .refresh-prompt-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #065f46;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .refresh-prompt-title::before {
+            content: "✨";
+            font-size: 16px;
+        }
+
+        .refresh-prompt-text {
+            font-size: 13px;
+            color: #047857;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+
+        .refresh-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .refresh-button {
+            padding: 8px 16px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .refresh-button:hover {
+            background: #059669;
+        }
+
+        .refresh-button.secondary {
+            background: transparent;
+            color: #047857;
+            border: 1px solid #10b981;
+        }
+
+        .refresh-button.secondary:hover {
+            background: #f0fff4;
+        }
+
+        /* Icon Swap Dialog */
+        .swap-dialog {
+            width: 760px;
+            max-width: 95vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .swap-dialog .dialog-content {
+            flex: 1;
+            overflow-y: auto;
+            max-height: calc(90vh - 140px);
+        }
+
+        .swap-preview {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 24px;
+            padding: 24px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 1px solid #e5e5e5;
+        }
+
+        .swap-section {
+            flex: 1;
+            text-align: center;
+        }
+
+        .swap-section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+
+        .swap-icon-preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .swap-icon-image {
+            width: 88px;
+            height: 88px;
+            border: 2px solid #e5e5e5;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .swap-icon-image img {
+            max-width: 72px;
+            max-height: 72px;
+            object-fit: contain;
+        }
+
+        .swap-placeholder {
+            font-size: 11px;
+            color: #999;
+            text-align: center;
+            line-height: 1.3;
+            padding: 8px;
+        }
+
+        .swap-icon-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1d1d1d;
+            max-width: 120px;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .swap-icon-details {
+            font-size: 11px;
+            color: #666;
+            max-width: 120px;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .swap-arrow {
+            font-size: 28px;
+            color: #666;
+            font-weight: 300;
+            flex-shrink: 0;
+            background: #ffffff;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #e5e5e5;
+        }
+
+        .swap-content-section {
+            margin-bottom: 24px;
+        }
+
+        .swap-content-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .swap-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .swap-section-title-main {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1d1d1d;
+        }
+
+        .swap-section-description {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+            margin-bottom: 16px;
+        }
+
+        .swap-search {
+            margin-bottom: 16px;
+        }
+
+        .swap-search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #ffffff;
+        }
+
+        .swap-search-input:focus {
+            border-color: #000000;
+        }
+
+        .swap-search-input::placeholder {
+            color: #999;
+        }
+
+        .swap-icon-grid-container {
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            background: #ffffff;
+            overflow: hidden;
+        }
+
+        .swap-icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+            gap: 8px;
+            max-height: 280px;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .swap-icon-grid::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .swap-icon-grid::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .swap-icon-grid::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .swap-icon-grid::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        .swap-grid-status {
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e5e5e5;
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .swap-grid-legend {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .swap-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .swap-icon-slot {
+            width: 64px;
+            height: 64px;
+            border: 2px solid #f0f0f0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: #ffffff;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .swap-icon-slot:hover {
+            border-color: #000000;
+            background: #f8f9fa;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .swap-icon-slot.selected {
+            border-color: #000000;
+            background: #f0f8ff;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .swap-icon-slot img {
+            max-width: 52px;
+            max-height: 52px;
+            object-fit: contain;
+        }
+
+        .swap-icon-slot .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1d1d1d;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            z-index: 1000;
+            margin-bottom: 6px;
+            max-width: 200px;
+            white-space: normal;
+            text-align: center;
+        }
+
+        .swap-icon-slot:hover .tooltip {
+            opacity: 1;
+        }
+
+        .swap-icon-slot.needs-conversion {
+            border-color: #0ea5e9;
+            background: #f0f9ff;
+        }
+
+        .swap-icon-slot.needs-conversion:hover {
+            border-color: #0284c7;
+            background: #e0f2fe;
+        }
+
+        .swap-status-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 20px;
+            height: 20px;
+            background: #f59e0b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: white;
+            font-weight: bold;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .swap-status-badge.component {
+            background: #10b981;
+        }
+
+        .swap-empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .swap-empty-state h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .swap-empty-state p {
+            font-size: 12px;
+            line-height: 1.4;
+            color: #666;
+        }
+
+        .swap-impact {
+            background: #f8f9fa;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .swap-impact .impact-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1d1d1d;
+            margin-bottom: 8px;
+        }
+
+        .swap-impact .impact-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .swap-impact .impact-stat {
+            color: #666;
+        }
+
+        .swap-impact .impact-value {
+            font-weight: 600;
+            color: #000;
+        }
+
+        /* Swap Sizing Controls */
+        .swap-sizing {
+            background: #fff8dc;
+            border: 1px solid #f4c842;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .sizing-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sizing-comparison {
+            display: flex;
+            gap: 32px;
+            margin-bottom: 20px;
+            justify-content: center;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 8px;
+        }
+
+        .size-info {
+            text-align: center;
+        }
+
+        .size-label {
+            font-size: 12px;
+            color: #666;
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .size-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+            display: block;
+        }
+
+        .sizing-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .sizing-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .sizing-option:hover {
+            background: rgba(244, 200, 66, 0.15);
+            border-color: rgba(244, 200, 66, 0.3);
+        }
+
+        .sizing-option input[type="radio"] {
+            margin-top: 3px;
+            width: 16px;
+            height: 16px;
+        }
+
+        .sizing-option-text {
+            flex: 1;
+        }
+
+        .sizing-option-text strong {
+            display: block;
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .sizing-option-text {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        /* Swap Conversion Notice */
+        .swap-conversion {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .conversion-notice {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .conversion-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .conversion-text {
+            flex: 1;
+        }
+
+        .conversion-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #0c4a6e;
+            margin-bottom: 4px;
+        }
+
+        .conversion-description {
+            font-size: 12px;
+            color: #075985;
+            line-height: 1.4;
+        }
+
+        /* Duplicate Consolidation Banner */
+        .duplicate-banner {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .duplicate-banner-content {
+            flex: 1;
+        }
+
+        .duplicate-banner-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 4px;
+        }
+
+        .duplicate-banner-text {
+            font-size: 12px;
+            color: #856404;
+            line-height: 1.4;
+        }
+
+        .duplicate-banner-button {
+            padding: 8px 16px;
+            background: #f59e0b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .duplicate-banner-button:hover {
+            background: #d97706;
+        }
+
+        .duplicate-banner-button:disabled {
+            background: #d4d4d4;
+            cursor: not-allowed;
+        }
+
+        /* Onboarding Overlay */
+        .onboarding-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            display: none;
+            z-index: 10000;
+            transition: all 0.3s ease;
+        }
+
+        .onboarding-overlay.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .onboarding-step {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 520px;
+            width: 90%;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            text-align: center;
+            position: relative;
+            animation: slideUp 0.5s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .onboarding-step h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1d1d1d;
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+        .onboarding-step p {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 32px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .onboarding-visual {
+            width: 120px;
+            height: 120px;
+            background: #230695;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 32px auto;
+            font-size: 48px;
+            color: white;
+            box-shadow: 0 8px 32px rgba(35, 6, 149, 0.4);
+        }
+
+        .onboarding-actions {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 32px;
+        }
+
+        .onboarding-button {
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            min-width: 120px;
+        }
+
+        .onboarding-button.primary {
+            background: #230695;
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 20px rgba(35, 6, 149, 0.4);
+        }
+
+        .onboarding-button.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(35, 6, 149, 0.5);
+        }
+
+        .onboarding-button.secondary {
+            background: white;
+            color: #666;
+            border-color: #e0e0e0;
+        }
+
+        .onboarding-button.secondary:hover {
+            background: #f8f9fa;
+            border-color: #d0d0d0;
+        }
+
+        .onboarding-progress {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 13px;
+            color: #999;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .onboarding-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            font-size: 20px;
+            color: #666;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+            font-weight: 300;
+        }
+
+        .onboarding-close:hover {
+            background: white;
+            color: #333;
+            border-color: rgba(0, 0, 0, 0.2);
+            transform: scale(1.05);
+        }
+
+        /* Settings Modal */
+        .settings-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .settings-modal.show {
+            display: flex;
+        }
+
+        .settings-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            width: 400px;
+            max-width: 90vw;
+            box-shadow: 0 20px 40px rgba(0, 0, 1, 0.15);
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .settings-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1d1d1d;
+        }
+
+        .settings-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .settings-option:last-child {
+            border-bottom: none;
+        }
+
+        .settings-option-info {
+            flex: 1;
+        }
+
+        .settings-option-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1d1d1d;
+            margin-bottom: 4px;
+        }
+
+        .settings-option-description {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .settings-button-action {
+            padding: 8px 16px;
+            background: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .settings-button-action:hover {
+            background: #0052a3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <!-- Main Search Row -->
+            <div class="search-row">
+                <input type="text" class="search-input" placeholder="Search icons in your Figma file..." autofocus>
+                <div class="view-toggle">
+                    <button class="view-button active" data-view="grid">Grid</button>
+                    <button class="view-button" data-view="list">List</button>
+                </div>
+            </div>
+            
+            <!-- Quick Filters -->
+            <div class="quick-filters">
+                <div class="filter-label">Filters</div>
+                <button class="filter-chip" id="currentPageChip">
+                    <span class="current-page-name" id="currentPageName">This page</span> only
+                </button>
+                <button class="filter-chip" id="unresolvedChip">
+                    Unresolved only
+                </button>
+                <button class="filter-chip" id="libraryNamesChip">
+                    Icon library names
+                </button>
+                <span class="filter-summary" id="filterSummary"></span>
+                <button class="settings-button" id="settingsButton" title="Settings">
+                    <span style="font-size: 14px;">⚙️</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Scan Results -->
+        <div class="scan-results" id="scanResults">
+            <div class="scan-header" style="margin-bottom: 12px;">
+                <h3 style="font-size: 14px; font-weight: 600; color: #1d1d1d; margin: 0;">Scan Results</h3>
+            </div>
+            <div class="result-stats">
+                <div class="stat">
+                    <span class="stat-value" id="iconCount">0</span> icons found
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="masterCount">0</span> master components
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="unresolvedCount">0</span> unresolved icons
+                </div>
+            </div>
+            <div class="scan-actions">
+                <button class="action-button primary" id="scanButton">Scan for Icons</button>
+                <button class="action-button" id="consolidateButton" disabled>Auto-Replace Icons</button>
+                <button class="action-button" id="reviewButton" disabled>Create Review Page</button>
+            </div>
+            
+            <!-- Progress (moved here for better visual hierarchy) -->
+            <div class="progress" id="progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <!-- Status (moved here for better visual hierarchy) -->
+            <div class="status-bar" id="statusBar"></div>
+        </div>
+
+        <!-- Status Legend -->
+        <div class="status-legend" id="statusLegend">
+            <div class="legend-item">
+                <div class="legend-color green"></div>
+                <span>Master Icons</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color purple"></div>
+                <span>Instance Icons</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color orange"></div>
+                <span>Unresolved Icons</span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <!-- Icon Area -->
+            <div class="icon-area">
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState">
+                    <h3>No icons found</h3>
+                    <p>Click "Scan for Icons" to discover icons in your Figma file, or add icons manually.</p>
+                </div>
+
+                <!-- Grid View -->
+                <div class="icon-grid" id="iconGrid" style="display: none;">
+                    <!-- Icons will be populated here -->
+                </div>
+
+                <!-- List View -->
+                <div class="icon-list" id="iconList">
+                    <!-- List items will be populated here -->
+                </div>
+            </div>
+
+            <!-- Details Panel -->
+            <div class="details-panel" id="detailsPanel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div class="icon-name" id="selectedIconName">Icon name</div>
+                    <button class="close-button" id="closeDetails" style="background: none; border: none; font-size: 16px; cursor: pointer; color: #666; padding: 4px;">×</button>
+                </div>
+                
+                <div class="icon-actions">
+                    <button class="swap-button" id="swapIconButton">Swap icon</button>
+                </div>
+
+                <div class="icon-status" id="iconStatus">
+                    This icon is unresolved. <a href="#" id="addToLibrary">Add to icon library</a>
+                </div>
+
+                <div class="icon-preview">
+                    <div class="preview-box" id="iconPreview">
+                        <!-- Icon preview -->
+                    </div>
+                    <div class="icon-size" id="iconSize">24 × 24</div>
+                </div>
+
+                <div class="icon-info">
+                    <div class="info-item">
+                        <div class="info-label">Source</div>
+                        <div class="info-value" id="iconSource">Unknown</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Type</div>
+                        <div class="info-value" id="iconType">Component</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Page</div>
+                        <div class="info-value" id="iconPage">Icons</div>
+                    </div>
+                </div>
+                        </div>
+        </div>
+    </div>
+
+    <!-- Auto-Replace Confirmation Dialog -->
+    <div class="dialog-overlay" id="autoReplaceDialog">
+        <div class="dialog">
+            <div class="dialog-header">
+                <div class="dialog-title">Auto-Replace Icons</div>
+                <div class="dialog-subtitle">This will replace unresolved icons with instances from the Icon Library.</div>
+            </div>
+            <div class="dialog-content">
+                <div class="scope-options">
+                    <div class="scope-option selected" data-scope="current-page">
+                        <div class="scope-radio"></div>
+                        <div class="scope-info">
+                            <div class="scope-title">Current page only</div>
+                            <div class="scope-description">Replace icons only on "<span id="currentPageNameDialog">This page</span>"</div>
+                        </div>
+                    </div>
+                    <div class="scope-option" data-scope="all-pages">
+                        <div class="scope-radio"></div>
+                        <div class="scope-info">
+                            <div class="scope-title">All pages</div>
+                            <div class="scope-description">Replace icons across the entire Figma file</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="impact-summary">
+                    <div class="impact-title">Impact Preview</div>
+                    <div class="impact-stats">
+                        <div class="impact-stat">
+                            <span class="impact-value" id="replaceableIcons">0</span> icons will be replaced
+                        </div>
+                        <div class="impact-stat">
+                            <span class="impact-value" id="newComponents">0</span> new master components will be created
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="dialog-actions">
+                <button class="dialog-button secondary" id="cancelReplace">Cancel</button>
+                <button class="dialog-button primary" id="confirmReplace">Replace Icons</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success & Refresh Dialog -->
+    <div class="dialog-overlay" id="successDialog">
+        <div class="dialog success-dialog">
+            <div class="dialog-header">
+                <div class="dialog-title">Auto-Replace Complete!</div>
+                <div class="dialog-subtitle" id="successMessage">Successfully replaced icons with master components.</div>
+            </div>
+            <div class="dialog-content">
+                <div class="refresh-prompt">
+                    <div class="refresh-prompt-title">See your updated results</div>
+                    <div class="refresh-prompt-text">
+                        Your icons have been replaced with instances from the Icon Library. 
+                        Would you like to refresh the scan to see the updated icon status?
+                    </div>
+                    <div class="refresh-actions">
+                        <button class="refresh-button" id="refreshAndScan">Yes, Refresh Scan</button>
+                        <button class="refresh-button secondary" id="skipRefresh">Skip for now</button>
+                    </div>
+                </div>
+            </div>
+            <div class="dialog-actions">
+                <button class="dialog-button secondary" id="closeSuccess">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Consolidate Dups Dialog -->
+    <div class="dialog-overlay" id="consolidateDupsDialog">
+        <div class="dialog">
+            <div class="dialog-header">
+                <div class="dialog-title">Consolidate Library Duplicates</div>
+                <div class="dialog-subtitle">Remove duplicate master components from the Icon Library page.</div>
+            </div>
+            <div class="dialog-content">
+                <div class="impact-summary">
+                    <div class="impact-title">What will happen</div>
+                    <div class="impact-stats">
+                        <div class="impact-stat">
+                            <span class="impact-value" id="duplicateCount">0</span> duplicate components will be removed
+                        </div>
+                        <div class="impact-stat">
+                            <span class="impact-value" id="keepCount">0</span> unique components will be kept
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                    <div style="font-size: 13px; font-weight: 600; color: #856404; margin-bottom: 8px;">⚠️ Important</div>
+                    <div style="font-size: 12px; color: #856404; line-height: 1.4;">
+                        This will permanently remove duplicate master components from your Icon Library. 
+                        Instances of removed components will be updated to reference the kept components.
+                    </div>
+                </div>
+            </div>
+            <div class="dialog-actions">
+                <button class="dialog-button secondary" id="cancelConsolidateDups">Cancel</button>
+                <button class="dialog-button primary" id="confirmConsolidateDups">Consolidate Duplicates</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Icon Swap Dialog -->
+    <div class="dialog-overlay" id="iconSwapDialog">
+        <div class="dialog swap-dialog">
+            <div class="dialog-header">
+                <div class="dialog-title">Smart Icon Swap</div>
+                <div class="dialog-subtitle">Replace this icon across your entire design file while preserving layout and properties</div>
+            </div>
+            <div class="dialog-content">
+                <!-- Preview Section -->
+                <div class="swap-preview">
+                    <div class="swap-section">
+                        <div class="swap-section-title">Current Icon</div>
+                        <div class="swap-icon-preview" id="currentSwapIcon">
+                            <div class="swap-icon-image" id="currentSwapImage"></div>
+                            <div class="swap-icon-name" id="currentSwapName">Current Icon</div>
+                            <div class="swap-icon-details" id="currentSwapDetails">24×24 • Page Name</div>
+                        </div>
+                    </div>
+                    
+                    <div class="swap-arrow">→</div>
+                    
+                    <div class="swap-section">
+                        <div class="swap-section-title">New Icon</div>
+                        <div class="swap-icon-preview" id="newSwapIcon">
+                            <div class="swap-icon-image" id="newSwapImage">
+                                <div class="swap-placeholder">Select a replacement icon from the grid below</div>
+                            </div>
+                            <div class="swap-icon-name" id="newSwapName">Choose replacement...</div>
+                            <div class="swap-icon-details" id="newSwapDetails">Select from available icons</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Icon Selection Section -->
+                <div class="swap-content-section">
+                    <div class="swap-section-header">
+                        <div class="swap-section-title-main">Choose Replacement Icon</div>
+                    </div>
+                    <div class="swap-section-description">
+                        Select any master component or icon-like element to use as the replacement. Non-components will be automatically converted to master components.
+                    </div>
+                    
+                    <div class="swap-search">
+                        <input type="text" class="swap-search-input" id="swapSearchInput" placeholder="Search by name (e.g., home, arrow, user)...">
+                    </div>
+                    
+                    <div class="swap-icon-grid-container">
+                        <div class="swap-grid-status">
+                            <span id="swapIconCount">Loading icons...</span>
+                            <div class="swap-grid-legend">
+                                <div class="swap-legend-item">
+                                    <div style="width: 12px; height: 12px; background: #10b981; border-radius: 50%;"></div>
+                                    <span>Ready to use</span>
+                                </div>
+                                <div class="swap-legend-item">
+                                    <div style="width: 12px; height: 12px; background: #f59e0b; border-radius: 50%;"></div>
+                                    <span>Will be converted</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="swap-icon-grid" id="swapIconGrid">
+                            <!-- Available icons will be populated here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Size Adjustment Section -->
+                <div class="swap-content-section">
+                    <div class="swap-sizing" id="swapSizing" style="display: none;">
+                        <div class="sizing-title">⚖️ Size Adjustment Options</div>
+                        <div class="sizing-comparison">
+                            <div class="size-info">
+                                <span class="size-label">Current Size:</span>
+                                <span class="size-value" id="currentIconSize">24×24</span>
+                            </div>
+                            <div class="size-info">
+                                <span class="size-label">Replacement Size:</span>
+                                <span class="size-value" id="replacementIconSize">32×32</span>
+                            </div>
+                        </div>
+                        <div class="sizing-options">
+                            <label class="sizing-option">
+                                <input type="radio" name="sizingMode" value="scale-to-fit" checked>
+                                <span class="sizing-option-text">
+                                    <strong>Scale to fit current size</strong><br>
+                                    Resize the replacement icon to match the current icon's dimensions. Preserves existing layouts.
+                                </span>
+                            </label>
+                            <label class="sizing-option">
+                                <input type="radio" name="sizingMode" value="keep-original">
+                                <span class="sizing-option-text">
+                                    <strong>Use replacement's original size</strong><br>
+                                    Keep the new icon at its natural size. All instances will update to the new dimensions.
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Conversion Notice -->
+                <div class="swap-content-section">
+                    <div class="swap-conversion" id="swapConversion" style="display: none;">
+                        <div class="conversion-notice">
+                            <div class="conversion-icon">⚡</div>
+                            <div class="conversion-text">
+                                <div class="conversion-title">Component Conversion Required</div>
+                                <div class="conversion-description">
+                                    This element will be converted to a master component with the name "<strong id="conversionComponentName"></strong>" and organized in your Icon Library.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Impact Preview -->
+                <div class="swap-content-section">
+                    <div class="swap-impact" id="swapImpact" style="display: none;">
+                        <div class="impact-title">📊 Swap Impact</div>
+                        <div class="impact-stats">
+                            <div class="impact-stat">
+                                <span class="impact-value" id="swapInstanceCount">0</span> instances will be updated
+                            </div>
+                            <div class="impact-stat">
+                                <span class="impact-value" id="swapPageCount">0</span> pages will be affected
+                            </div>
+                        </div>
+                        <div class="swap-notice">
+                            <div style="font-size: 12px; color: #666; margin-top: 8px; line-height: 1.4;">
+                                <strong>What happens:</strong> The original icon will be safely archived to "🗄️ Archived Icons" page, 
+                                and all instances across your file will be updated to use the new icon while preserving position, 
+                                rotation, opacity, effects, and other properties.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="dialog-actions">
+                <button class="dialog-button secondary" id="cancelIconSwap">Cancel</button>
+                <button class="dialog-button primary" id="confirmIconSwap" disabled>
+                    <span id="swapButtonText">Select an icon to continue</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onboarding Overlay -->
+    <div class="onboarding-overlay" id="onboardingOverlay">
+        <div class="onboarding-step" id="onboardingStep">
+            <div class="onboarding-progress" id="onboardingProgress">1 of 4</div>
+            <button class="onboarding-close" id="onboardingClose">×</button>
+            <div class="onboarding-visual" id="onboardingVisual">🎯</div>
+            <h2 id="onboardingTitle">Welcome to Icon Management!</h2>
+            <p id="onboardingDescription">This plugin helps you organize, replace, and manage icons across your entire Figma design system.</p>
+            <div class="onboarding-actions">
+                <button class="onboarding-button secondary" id="onboardingSkip">Skip tutorial</button>
+                <button class="onboarding-button primary" id="onboardingNext">Get started</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-content">
+            <div class="settings-header">
+                <h2 class="settings-title">Settings</h2>
+                <button class="onboarding-close" id="settingsClose">×</button>
+            </div>
+            
+            <div class="settings-option">
+                <div class="settings-option-info">
+                    <div class="settings-option-title">Tutorial</div>
+                    <div class="settings-option-description">Watch the onboarding tutorial again to learn about plugin features</div>
+                </div>
+                <button class="settings-button-action" id="replayTutorial">Replay tutorial</button>
+            </div>
+            
+            <div class="settings-option">
+                <div class="settings-option-info">
+                    <div class="settings-option-title">About</div>
+                    <div class="settings-option-description">Icon Management Plugin v1.0 - Organize your design system icons</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+        // State
+        let iconData = {
+            totalIcons: 0,
+            inconsistencies: 0,
+            discoveredIcons: [],
+            scanComplete: false
+        };
+
+        // Onboarding System
+        let currentOnboardingStep = 0;
+        const onboardingSteps = [
+            {
+                title: "Welcome to Icon Management!",
+                description: "This plugin helps you organize, replace, and manage icons across your entire Figma design system.",
+                visual: "🎯",
+                action: "Get started"
+            },
+            {
+                title: "Discover Icons in Your File",
+                description: "Click 'Scan for Icons' to find all icons in your Figma file. The plugin will identify components, instances, and unresolved icon elements.",
+                visual: "🔍",
+                action: "Next"
+            },
+            {
+                title: "Auto-Replace Unresolved Icons",
+                description: "Use 'Auto-Replace Icons' to convert similar icons into organized master components. This cleans up your design system automatically.",
+                visual: "⚡",
+                action: "Next"
+            },
+            {
+                title: "Smart Icon Swapping",
+                description: "Select any icon and use 'Swap icon' to replace it across your entire file while preserving all positioning and properties.",
+                visual: "🔄",
+                action: "Start using"
+            }
+        ];
+
+        // Onboarding state
+        let onboardingCompleted = false;
+
+        // Check if user has seen onboarding
+        function hasSeenOnboarding() {
+            return onboardingCompleted;
+        }
+
+        // Mark onboarding as complete
+        function markOnboardingComplete() {
+            onboardingCompleted = true;
+            // Store in Figma's persistent storage via backend
+            parent.postMessage({ 
+                pluginMessage: { 
+                    type: 'set-onboarding-complete',
+                    completed: true
+                } 
+            }, '*');
+        }
+
+        // Show onboarding
+        function showOnboarding() {
+            currentOnboardingStep = 0;
+            updateOnboardingStep();
+            document.getElementById('onboardingOverlay').classList.add('show');
+        }
+
+        // Hide onboarding
+        function hideOnboarding() {
+            document.getElementById('onboardingOverlay').classList.remove('show');
+        }
+
+        // Update onboarding step
+        function updateOnboardingStep() {
+            const step = onboardingSteps[currentOnboardingStep];
+            const totalSteps = onboardingSteps.length;
+            
+            document.getElementById('onboardingProgress').textContent = `${currentOnboardingStep + 1} of ${totalSteps}`;
+            document.getElementById('onboardingTitle').textContent = step.title;
+            document.getElementById('onboardingDescription').textContent = step.description;
+            document.getElementById('onboardingVisual').textContent = step.visual;
+            document.getElementById('onboardingNext').textContent = step.action;
+        }
+
+        // Next onboarding step
+        function nextOnboardingStep() {
+            trackOnboardingStep(currentOnboardingStep, 'next');
+            
+            if (currentOnboardingStep < onboardingSteps.length - 1) {
+                currentOnboardingStep++;
+                updateOnboardingStep();
+            } else {
+                // Complete onboarding
+                trackOnboardingStep(currentOnboardingStep, 'completed');
+                markOnboardingComplete();
+                hideOnboarding();
+            }
+        }
+
+        // Skip onboarding
+        function skipOnboarding() {
+            trackOnboardingStep(currentOnboardingStep, 'skipped');
+            markOnboardingComplete();
+            hideOnboarding();
+        }
+
+        // Settings modal functions
+        function showSettingsModal() {
+            document.getElementById('settingsModal').classList.add('show');
+        }
+
+        function hideSettingsModal() {
+            document.getElementById('settingsModal').classList.remove('show');
+        }
+
+        let currentView = 'grid';
+        let selectedIcon = null;
+        let isSelectingFromCanvas = false; // Prevent selection loops
+        let currentPageFilter = false;
+        let currentPageName = '';
+        let searchFilter = '';
+        let unresolvedOnlyFilter = false;
+        let libraryNamesOnlyFilter = false;
+        let newStatusCleanupTimer = null;
+        let currentMode = 'management'; // 'library' or 'management'
+
+        // DOM Elements
+        const elements = {
+            searchInput: document.querySelector('.search-input'),
+            addButton: document.querySelector('.add-button'),
+            viewButtons: document.querySelectorAll('.view-button'),
+            progress: document.getElementById('progress'),
+            progressBar: document.getElementById('progressBar'),
+            statusBar: document.getElementById('statusBar'),
+            scanResults: document.getElementById('scanResults'),
+            statusLegend: document.getElementById('statusLegend'),
+            iconCount: document.getElementById('iconCount'),
+            unresolvedCount: document.getElementById('unresolvedCount'),
+            scanButton: document.getElementById('scanButton'),
+            consolidateButton: document.getElementById('consolidateButton'),
+            reviewButton: document.getElementById('reviewButton'),
+            emptyState: document.getElementById('emptyState'),
+            iconGrid: document.getElementById('iconGrid'),
+            iconList: document.getElementById('iconList'),
+            detailsPanel: document.getElementById('detailsPanel'),
+            selectedIconName: document.getElementById('selectedIconName'),
+            iconPreview: document.getElementById('iconPreview'),
+            iconSize: document.getElementById('iconSize'),
+            iconSource: document.getElementById('iconSource'),
+            iconType: document.getElementById('iconType'),
+            iconPage: document.getElementById('iconPage'),
+            iconStatus: document.getElementById('iconStatus'),
+            addToLibrary: document.getElementById('addToLibrary'),
+            currentPageName: document.getElementById('currentPageName'),
+            filterSummary: document.getElementById('filterSummary')
+        };
+
+        // Functions
+        function showStatus(message, type = 'info') {
+            elements.statusBar.textContent = message;
+            elements.statusBar.className = `status-bar show ${type}`;
+            
+            // Keep different message types visible for appropriate durations
+            let timeout;
+            switch (type) {
+                case 'error':
+                    timeout = 10000; // 10 seconds for errors
+                    break;
+                case 'warning':
+                    timeout = 8000; // 8 seconds for warnings
+                    break;
+                case 'success':
+                    timeout = 6000; // 6 seconds for success messages (longer than default)
+                    break;
+                default:
+                    timeout = 4000; // 4 seconds for info messages
+            }
+            
+            setTimeout(() => {
+                elements.statusBar.classList.remove('show');
+            }, timeout);
+        }
+
+        function showProgress(show = true) {
+            elements.progress.classList.toggle('show', show);
+        }
+
+        function updateProgress(percentage) {
+            elements.progressBar.style.width = `${percentage}%`;
+        }
+
+        function updateStats() {
+            // Only count valid, non-deleted icons
+            const validIcons = iconData.discoveredIcons ? iconData.discoveredIcons.filter(icon => icon && icon.id) : [];
+            const actualCount = validIcons.length;
+            const masterCount = validIcons.filter(icon => icon.status === 'master' || icon.status === 'master-component').length;
+            const unresolvedCount = validIcons.filter(icon => icon.status === 'unresolved' || icon.status === 'in-frame').length;
+            
+            elements.iconCount.textContent = actualCount;
+            elements.unresolvedCount.textContent = unresolvedCount;
+            
+            // Update master count in scan results
+            const masterCountElement = document.getElementById('masterCount');
+            if (masterCountElement) {
+                masterCountElement.textContent = masterCount;
+            }
+        }
+
+        function isOnIconLibraryPage() {
+            return currentPageName === '🎯 Icon Library';
+        }
+        
+        function updateMode() {
+            // Don't update mode if we don't know the current page yet
+            if (!currentPageName) {
+                return;
+            }
+            
+            const wasLibraryMode = currentMode === 'library';
+            currentMode = isOnIconLibraryPage() ? 'library' : 'management';
+            
+            // Update UI based on mode
+            updateModeUI();
+            
+            // Re-populate if mode changed
+            if ((wasLibraryMode && currentMode === 'management') || (!wasLibraryMode && currentMode === 'library')) {
+                populateIcons();
+            }
+        }
+        
+        function updateModeUI() {
+            const scanResults = document.getElementById('scanResults');
+            const modeHeader = document.querySelector('.scan-header h3');
+            const unresolvedChip = document.getElementById('unresolvedChip');
+            const currentPageChip = document.getElementById('currentPageChip');
+            
+            if (currentMode === 'library') {
+                // Icon Library Mode
+                modeHeader.textContent = 'Icon Library Management';
+                
+                // Hide auto-replace and review actions
+                elements.consolidateButton.style.display = 'none';
+                elements.reviewButton.style.display = 'none';
+                
+                // Update filter chip labels for library context
+                unresolvedChip.textContent = 'Duplicates only';
+                currentPageChip.style.display = 'none'; // Always filtered to current page in library mode
+                
+                // Show different stats in library mode
+                updateLibraryModeStats();
+                
+                // Auto-enable current page filter for library
+                currentPageFilter = true;
+                updateFilterChipState('currentPageChip', true);
+                
+            } else {
+                // Icon Management Mode  
+                modeHeader.textContent = 'Icon Management';
+                
+                // Show auto-replace and review actions
+                elements.consolidateButton.style.display = 'inline-block';
+                elements.reviewButton.style.display = 'inline-block';
+                
+                // Update filter chip labels for management context
+                unresolvedChip.textContent = 'Unresolved only';
+                currentPageChip.style.display = 'inline-block';
+                
+                // Show normal stats
+                updateStats();
+            }
+        }
+        
+        function updateLibraryModeStats() {
+            if (!iconData.discoveredIcons) return;
+            
+            // Filter to library page only
+            const libraryIcons = iconData.discoveredIcons.filter(icon => 
+                icon && icon.id && icon.page === currentPageName
+            );
+            
+            const masterCount = libraryIcons.filter(icon => 
+                icon.status === 'master' || icon.status === 'master-component'
+            ).length;
+            
+            const duplicateCount = libraryIcons.filter(icon => icon.isDuplicate).length;
+            
+            elements.iconCount.textContent = libraryIcons.length;
+            document.getElementById('masterCount').textContent = masterCount;
+            elements.unresolvedCount.textContent = duplicateCount;
+            
+            // Update label for library mode
+            const unresolvedLabel = elements.unresolvedCount.parentNode;
+            if (unresolvedLabel && unresolvedLabel.textContent.includes('unresolved')) {
+                unresolvedLabel.innerHTML = unresolvedLabel.innerHTML.replace('unresolved icons', 'duplicate components');
+            }
+        }
+
+        // New status management with 2-minute auto-expiry
+        function markIconAsNew(icon) {
+            icon.isNew = true;
+            icon.newTimestamp = Date.now();
+        }
+
+        function cleanupExpiredNewStatuses() {
+            if (!iconData.discoveredIcons) return;
+            
+            const now = Date.now();
+            const twoMinutes = 2 * 60 * 1000; // 2 minutes in milliseconds
+            let hasChanges = false;
+            
+            iconData.discoveredIcons.forEach(icon => {
+                if (icon.isNew && icon.newTimestamp && (now - icon.newTimestamp) > twoMinutes) {
+                    icon.isNew = false;
+                    delete icon.newTimestamp;
+                    hasChanges = true;
+                }
+            });
+            
+            // Refresh UI if any changes were made
+            if (hasChanges) {
+                populateIcons();
+            }
+        }
+
+        function startNewStatusCleanupTimer() {
+            // Clear existing timer
+            if (newStatusCleanupTimer) {
+                clearInterval(newStatusCleanupTimer);
+            }
+            
+            // Start new timer to check every 30 seconds
+            newStatusCleanupTimer = setInterval(cleanupExpiredNewStatuses, 30000);
+        }
+
+        function stopNewStatusCleanupTimer() {
+            if (newStatusCleanupTimer) {
+                clearInterval(newStatusCleanupTimer);
+                newStatusCleanupTimer = null;
+            }
+        }
+
+        function switchView(view) {
+            currentView = view;
+            
+            // Update buttons
+            elements.viewButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === view);
+            });
+
+            // Update display
+            if (view === 'grid') {
+                elements.iconGrid.style.display = 'block';
+                elements.iconList.classList.remove('show');
+            } else {
+                elements.iconGrid.style.display = 'none';
+                elements.iconList.classList.add('show');
+            }
+            
+            // Track view switching
+            trackEvent('view_switched', { view_type: view });
+        }
+
+        function getFilteredIcons() {
+            if (!iconData.discoveredIcons) return [];
+            
+            return iconData.discoveredIcons.filter((icon, index) => {
+                // First filter out invalid/deleted icons
+                if (!icon || !icon.id) {
+                    return false;
+                }
+                
+                // Mode-based filtering
+                if (currentMode === 'library') {
+                    // Library mode: only show icons from Icon Library page
+                    if (icon.page !== currentPageName) {
+                        return false;
+                    }
+                } else {
+                    // Management mode: apply normal page filter
+                    if (currentPageFilter && currentPageName && icon.page !== currentPageName) {
+                        return false;
+                    }
+                }
+                
+                // Search filter - more forgiving search
+                if (searchFilter) {
+                    const searchLower = searchFilter.toLowerCase();
+                    const iconNameLower = icon.name.toLowerCase();
+                    const iconPageLower = icon.page.toLowerCase();
+                    
+                    // Search in name, page, and source
+                    if (!iconNameLower.includes(searchLower) && 
+                        !iconPageLower.includes(searchLower) &&
+                        !(icon.source && icon.source.toLowerCase().includes(searchLower))) {
+                        return false;
+                    }
+                }
+                
+                // Unresolved filter (context-sensitive)
+                if (unresolvedOnlyFilter) {
+                    if (currentMode === 'library') {
+                        // In library mode, "unresolved" means duplicates
+                        if (!icon.isDuplicate) {
+                            return false;
+                        }
+                    } else {
+                        // In management mode, "unresolved" means actual unresolved icons
+                        const status = icon.status === 'in-frame' ? 'unresolved' : 
+                                      icon.status === 'component-instance' ? 'instance' : 
+                                      icon.status === 'master-component' ? 'master' : icon.status;
+                        if (status !== 'unresolved') {
+                            return false;
+                        }
+                    }
+                }
+                
+                // Library names filter - show only icons with organized/structured names
+                if (libraryNamesOnlyFilter) {
+                    const hasLibraryName = icon.name.includes('/') || // Has category separator
+                                          icon.name.toLowerCase().includes('icon') ||
+                                          icon.name.toLowerCase().includes('library') ||
+                                          /^[A-Z][a-z]+[A-Z]/.test(icon.name) || // PascalCase
+                                          icon.name.includes('-') || // kebab-case
+                                          icon.name.includes('_'); // snake_case
+                    
+                    if (!hasLibraryName) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            }).map((icon, filteredIndex) => {
+                // Find original index for selection purposes
+                const originalIndex = iconData.discoveredIcons.findIndex(orig => orig.id === icon.id);
+                return { icon, index: originalIndex };
+            });
+        }
+
+        function populateIcons() {
+            // Only count valid, non-deleted icons
+            const validIcons = iconData.discoveredIcons ? iconData.discoveredIcons.filter(icon => icon && icon.id) : [];
+            const actualCount = validIcons.length;
+            
+            if (actualCount === 0) {
+                elements.emptyState.style.display = 'block';
+                
+                if (currentMode === 'library') {
+                    elements.emptyState.innerHTML = `
+                        <h3>Icon Library is empty</h3>
+                        <p>Use "Auto-Replace Icons" from other pages to populate your library with master components.</p>
+                    `;
+                } else {
+                    elements.emptyState.innerHTML = `
+                        <h3>No icons found</h3>
+                        <p>Click "Scan for Icons" to discover icons in your Figma file, or add icons manually.</p>
+                    `;
+                }
+                
+                elements.iconGrid.style.display = 'none';
+                elements.iconList.classList.remove('show');
+                elements.scanResults.classList.add('show');
+                elements.statusLegend.classList.remove('show');
+                
+                // Hide details panel when no icons
+                elements.detailsPanel.classList.remove('show');
+                document.querySelector('.content').classList.remove('with-details');
+                return;
+            }
+
+            const filteredIcons = getFilteredIcons();
+            
+            // Update filter summary
+            const hasFilters = searchFilter || currentPageFilter || unresolvedOnlyFilter || libraryNamesOnlyFilter;
+            if (hasFilters) {
+                elements.filterSummary.textContent = `${filteredIcons.length} of ${actualCount}`;
+            } else {
+                elements.filterSummary.textContent = '';
+            }
+            
+            if (filteredIcons.length === 0 && hasFilters) {
+                elements.emptyState.style.display = 'block';
+                
+                if (currentMode === 'library') {
+                    const searchText = searchFilter ? ` for "${searchFilter}"` : '';
+                    elements.emptyState.innerHTML = `
+                        <h3>No library components match your filters</h3>
+                        <p>Try adjusting your search${searchText} or showing all components.</p>
+                    `;
+                } else {
+                    const searchText = searchFilter ? ` for "${searchFilter}"` : '';
+                    elements.emptyState.innerHTML = `
+                        <h3>No icons match your filters</h3>
+                        <p>Try adjusting your search${searchText} or filter settings.</p>
+                    `;
+                }
+                
+                elements.iconGrid.style.display = 'none';
+                elements.iconList.classList.remove('show');
+                return;
+            }
+
+            elements.emptyState.style.display = 'none';
+            elements.scanResults.classList.add('show');
+            elements.statusLegend.classList.add('show');
+
+            // Group filtered icons by page and then by status
+            const iconsByPage = new Map();
+            filteredIcons.forEach(({ icon, index }) => {
+                // Map old status names to new simplified names
+                let status = icon.status;
+                if (status === 'in-frame') status = 'unresolved';
+                if (status === 'component-instance') status = 'instance';
+                if (status === 'master-component') status = 'master';
+                
+                if (!iconsByPage.has(icon.page)) {
+                    iconsByPage.set(icon.page, {
+                        master: [],
+                        instance: [],
+                        unresolved: []
+                    });
+                }
+                iconsByPage.get(icon.page)[status].push({ icon: { ...icon, status }, index });
+            });
+
+            // Populate grid with page sections organized by status
+            elements.iconGrid.innerHTML = '';
+            elements.iconGrid.style.display = 'block';
+            
+            for (const [pageName, statusGroups] of iconsByPage) {
+                // Create page section
+                const pageSection = document.createElement('div');
+                pageSection.className = 'page-section';
+                
+                const totalCount = statusGroups.master.length + statusGroups.instance.length + statusGroups.unresolved.length;
+                
+                // Create page header
+                const pageHeader = document.createElement('div');
+                pageHeader.className = 'page-header';
+                pageHeader.innerHTML = `
+                    <div class="page-title">${pageName}</div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="page-count">${totalCount} icons</div>
+                        <div class="page-toggle">▼</div>
+                    </div>
+                `;
+                
+                // Add toggle functionality
+                pageHeader.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    pageSection.classList.toggle('collapsed');
+                });
+                
+                // Add duplicate consolidation banner for Icon Library page
+                let duplicateBanner = null;
+                if (pageName === '🎯 Icon Library') {
+                    const duplicateIcons = statusGroups.master.filter(({ icon }) => icon.isDuplicate);
+                    if (duplicateIcons.length > 0) {
+                        duplicateBanner = document.createElement('div');
+                        duplicateBanner.className = 'duplicate-banner';
+                        duplicateBanner.innerHTML = `
+                            <div class="duplicate-banner-content">
+                                <div class="duplicate-banner-title">⚠️ Duplicate Components Detected</div>
+                                <div class="duplicate-banner-text">${duplicateIcons.length} duplicate master components found. Consolidate to keep your library clean.</div>
+                            </div>
+                            <button class="duplicate-banner-button" id="consolidateDupsButton">
+                                Consolidate Dups (${duplicateIcons.length})
+                            </button>
+                        `;
+                    }
+                }
+                
+                // Create page content container
+                const pageContent = document.createElement('div');
+                pageContent.className = 'page-content';
+                
+                // Add status groups in logical order: Master, Instance, Unresolved
+                const statusOrder = [
+                    { key: 'master', label: 'MASTER ICONS', color: 'green' },
+                    { key: 'instance', label: 'INSTANCE ICONS', color: 'purple' },
+                    { key: 'unresolved', label: 'UNRESOLVED ICONS', color: 'orange' }
+                ];
+                
+                statusOrder.forEach(({ key, label, color }) => {
+                    const icons = statusGroups[key];
+                    if (icons.length > 0) {
+                        // Status subheader
+                        const statusHeader = document.createElement('div');
+                        statusHeader.style.cssText = `
+                            font-size: 11px;
+                            font-weight: 600;
+                            color: #666;
+                            margin: 12px 0 8px 0;
+                            padding-bottom: 4px;
+                            border-bottom: 1px solid #e6e6e6;
+                            display: flex;
+                            align-items: center;
+                            gap: 6px;
+                        `;
+                        statusHeader.innerHTML = `
+                            <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--${color}-color, ${color === 'green' ? '#10b981' : color === 'purple' ? '#8b5cf6' : '#f59e0b'});"></div>
+                            ${label} (${icons.length})
+                        `;
+                        pageContent.appendChild(statusHeader);
+                        
+                        // Status icons grid
+                        const statusGrid = document.createElement('div');
+                        statusGrid.style.cssText = `
+                            display: grid;
+                            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+                            gap: 8px;
+                            margin-bottom: 16px;
+                        `;
+                        
+                        icons.forEach(({ icon, index }) => {
+                            const slot = document.createElement('div');
+                            slot.className = `icon-slot filled status-${icon.status}`;
+                            slot.dataset.iconIndex = index;
+                            
+                            // Create tooltip text
+                            let tooltipText = '';
+                            switch (icon.status) {
+                                case 'unresolved':
+                                    tooltipText = icon.frameContext ? `Unresolved: ${icon.frameContext}` : 'Unresolved';
+                                    break;
+                                case 'instance':
+                                    tooltipText = 'Instance icon';
+                                    break;
+                                case 'master':
+                                    tooltipText = `Master icon${icon.instanceCount ? ` (${icon.instanceCount} instances)` : ''}`;
+                                    break;
+                            }
+                            
+                            // Add tags for new or duplicate icons
+                            let tags = '';
+                            if (icon.isNew) {
+                                tags += '<div class="icon-tag new">NEW</div>';
+                            }
+                            // Only show DUP tag on Icon Library page where consolidation happens
+                            if (icon.isDuplicate && icon.page === '🎯 Icon Library') {
+                                tags += '<div class="icon-tag duplicate">DUP</div>';
+                            }
+                            
+                            if (icon.preview) {
+                                // Show actual icon preview with tooltip
+                                slot.innerHTML = `
+                                    <img src="${icon.preview}" 
+                                         alt="${icon.name}" 
+                                         style="max-width: 48px; max-height: 48px; object-fit: contain;">
+                                    <div class="tooltip">${tooltipText}</div>
+                                    ${tags}
+                                `;
+                            } else {
+                                // Fallback to text if no preview available
+                                slot.innerHTML = `
+                                    <div style="font-size: 10px; text-align: center; color: #999;">${icon.name.substring(0, 8)}</div>
+                                    <div class="tooltip">${tooltipText}</div>
+                                    ${tags}
+                                `;
+                            }
+                            
+                            slot.addEventListener('click', () => selectIcon(index));
+                            statusGrid.appendChild(slot);
+                        });
+                        
+                        pageContent.appendChild(statusGrid);
+                    }
+                });
+                
+                pageSection.appendChild(pageHeader);
+                
+                // Add duplicate banner if it exists
+                if (duplicateBanner) {
+                    pageSection.appendChild(duplicateBanner);
+                    // Add event listener for the consolidate button
+                    const consolidateBtn = duplicateBanner.querySelector('#consolidateDupsButton');
+                    if (consolidateBtn) {
+                        consolidateBtn.addEventListener('click', () => {
+                            if (iconData.scanComplete && isOnIconLibraryPage()) {
+                                showConsolidateDupsDialog();
+                            }
+                        });
+                    }
+                }
+                
+                pageSection.appendChild(pageContent);
+                elements.iconGrid.appendChild(pageSection);
+            }
+
+            // Add "add more" slot at the end
+            const addSlot = document.createElement('div');
+            addSlot.className = 'icon-slot';
+            addSlot.innerHTML = '<div class="add-icon-slot">+</div>';
+            addSlot.style.marginTop = '16px';
+            elements.iconGrid.appendChild(addSlot);
+
+            // Populate list (also grouped by page and status)
+            elements.iconList.innerHTML = '';
+            for (const [pageName, statusGroups] of iconsByPage) {
+                const totalCount = statusGroups.master.length + statusGroups.instance.length + statusGroups.unresolved.length;
+                
+                // Page header for list view
+                const listPageHeader = document.createElement('div');
+                listPageHeader.className = 'list-page-header';
+                listPageHeader.style.cssText = `
+                    padding: 8px;
+                    background: #f8f9fa;
+                    border-bottom: 1px solid #e6e6e6;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #666;
+                `;
+                listPageHeader.textContent = `${pageName} (${totalCount} icons)`;
+                elements.iconList.appendChild(listPageHeader);
+                
+                // Add icons by status groups in logical order
+                const statusOrder = [
+                    { key: 'master', label: 'MASTER ICONS' },
+                    { key: 'instance', label: 'INSTANCE ICONS' },
+                    { key: 'unresolved', label: 'UNRESOLVED ICONS' }
+                ];
+                
+                statusOrder.forEach(({ key, label }) => {
+                    const icons = statusGroups[key];
+                    if (icons.length > 0) {
+                        // Status subheader for list
+                        const statusSubheader = document.createElement('div');
+                        statusSubheader.style.cssText = `
+                            padding: 4px 8px;
+                            background: #f0f0f0;
+                            font-size: 10px;
+                            font-weight: 600;
+                            color: #888;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                        `;
+                        statusSubheader.textContent = `${label} (${icons.length})`;
+                        elements.iconList.appendChild(statusSubheader);
+                        
+                        icons.forEach(({ icon, index }) => {
+                            const item = document.createElement('div');
+                            item.className = 'list-item';
+                            item.dataset.iconIndex = index;
+                            
+                            const iconPreview = icon.preview 
+                                ? `<img src="${icon.preview}" style="width: 100%; height: 100%; object-fit: contain;" alt="${icon.name}">`
+                                : '<div style="background: #f0f0f0; width: 100%; height: 100%; border-radius: 2px;"></div>';
+                                
+                            item.innerHTML = `
+                                <div class="list-icon">${iconPreview}</div>
+                                <div class="list-name">${icon.name}</div>
+                            `;
+                            item.addEventListener('click', () => selectIcon(index));
+                            elements.iconList.appendChild(item);
+                        });
+                    }
+                });
+            }
+
+            switchView(currentView);
+        }
+
+        function selectIcon(index) {
+            selectedIcon = iconData.discoveredIcons[index];
+            
+            // Update selection in UI
+            document.querySelectorAll('.icon-slot, .list-item').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            document.querySelectorAll(`[data-icon-index="${index}"]`).forEach(el => {
+                el.classList.add('selected');
+            });
+
+            // Show details panel
+            elements.detailsPanel.classList.add('show');
+            document.querySelector('.content').classList.add('with-details');
+            
+            // Update details
+            elements.selectedIconName.textContent = selectedIcon.name;
+            elements.iconSize.textContent = `${selectedIcon.width} × ${selectedIcon.height}`;
+            elements.iconSource.textContent = selectedIcon.frameContext ? `Found in ${selectedIcon.frameContext}` : selectedIcon.source;
+            elements.iconType.textContent = selectedIcon.type === 'COMPONENT_SET' ? 'Component Set' : selectedIcon.type;
+            elements.iconPage.textContent = selectedIcon.page;
+            
+            // Update status message
+            const statusElement = document.getElementById('iconStatus');
+            if (statusElement) {
+                let statusMessage = '';
+                let statusClass = 'icon-status';
+                
+                switch (selectedIcon.status) {
+                    case 'master':
+                        statusMessage = `This is a master icon component${selectedIcon.instanceCount ? ` with ${selectedIcon.instanceCount} instances` : ''}.`;
+                        statusClass += ' master-status';
+                        break;
+                    case 'instance':
+                        statusMessage = 'This is an instance of a master component. <a href="#" id="addToLibrary">Go to master</a>';
+                        statusClass += ' instance-status';
+                        break;
+                    case 'unresolved':
+                    default:
+                        statusMessage = 'This icon is unresolved. <a href="#" id="addToLibrary">Add to icon library</a>';
+                        statusClass += ' unresolved-status';
+                        break;
+                }
+                
+                statusElement.className = statusClass;
+                statusElement.innerHTML = statusMessage;
+            }
+            
+            // Update preview in details panel
+            if (selectedIcon.preview) {
+                elements.iconPreview.innerHTML = `
+                    <img src="${selectedIcon.preview}" 
+                         alt="${selectedIcon.name}" 
+                         style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                `;
+            } else {
+                elements.iconPreview.innerHTML = '<div style="color: #999; font-size: 10px;">No preview</div>';
+            }
+            
+            // Select icon on canvas (only if not already selecting from canvas)
+            if (!isSelectingFromCanvas) {
+                parent.postMessage({ 
+                    pluginMessage: { 
+                        type: 'select-icon',
+                        iconId: selectedIcon.id 
+                    } 
+                }, '*');
+            }
+        }
+
+        function selectIconById(iconId) {
+            const index = iconData.discoveredIcons.findIndex(icon => icon.id === iconId);
+            if (index !== -1) {
+                selectIcon(index);
+            }
+        }
+
+        function setButtonLoading(button, loading = true) {
+            if (loading) {
+                button.disabled = true;
+                button.textContent = 'Scanning...';
+            } else {
+                button.disabled = false;
+                button.textContent = 'Scan for Icons';
+            }
+        }
+
+        // Auto-Replace Dialog Functions
+        function showAutoReplaceDialog() {
+            const dialog = document.getElementById('autoReplaceDialog');
+            const currentPageNameDialog = document.getElementById('currentPageNameDialog');
+            
+            // Update current page name in dialog
+            currentPageNameDialog.textContent = currentPageName || 'This page';
+            
+            // Calculate impact preview
+            updateImpactPreview('current-page');
+            
+            // Show dialog
+            dialog.classList.add('show');
+        }
+
+        function hideAutoReplaceDialog() {
+            const dialog = document.getElementById('autoReplaceDialog');
+            dialog.classList.remove('show');
+        }
+
+        function updateImpactPreview(scope) {
+            const replaceableIconsEl = document.getElementById('replaceableIcons');
+            const newComponentsEl = document.getElementById('newComponents');
+            
+            if (!iconData.discoveredIcons) {
+                replaceableIconsEl.textContent = '0';
+                newComponentsEl.textContent = '0';
+                return;
+            }
+            
+            let iconPool = iconData.discoveredIcons;
+            
+            // Filter by scope
+            if (scope === 'current-page' && currentPageName) {
+                iconPool = iconData.discoveredIcons.filter(icon => icon.page === currentPageName);
+            }
+            
+            // Count unresolved icons that can be replaced
+            const replaceableIcons = iconPool.filter(icon => 
+                icon.status === 'unresolved' || icon.status === 'in-frame'
+            ).length;
+            
+            // Estimate new components (unique icons by normalized name + size)
+            const uniqueIconKeys = new Set();
+            iconPool.forEach(icon => {
+                if (icon.status === 'unresolved' || icon.status === 'in-frame') {
+                    const normalizedName = icon.name.toLowerCase()
+                        .replace(/[-_\s\.]/g, '')
+                        .replace(/\d+/g, '')
+                        .replace(/(icon|svg|vector|graphic|outline|filled|solid)/g, '')
+                        .replace(/[^a-z]/g, '');
+                    const sizeGroup = `${Math.round(icon.width/8)*8}x${Math.round(icon.height/8)*8}`;
+                    const key = `${normalizedName}_${sizeGroup}_${icon.source}`;
+                    uniqueIconKeys.add(key);
+                }
+            });
+            
+            replaceableIconsEl.textContent = replaceableIcons;
+            newComponentsEl.textContent = uniqueIconKeys.size;
+        }
+
+        function selectScopeOption(selectedScope) {
+            // Update visual selection
+            document.querySelectorAll('.scope-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.querySelector(`[data-scope="${selectedScope}"]`).classList.add('selected');
+            
+            // Update impact preview
+            updateImpactPreview(selectedScope);
+        }
+
+        function executeAutoReplace() {
+            const selectedScope = document.querySelector('.scope-option.selected').dataset.scope;
+            
+            // Track auto-replace usage
+            const unresolvedCount = iconData.discoveredIcons ? 
+                iconData.discoveredIcons.filter(icon => 
+                    icon.status === 'unresolved' || icon.status === 'in-frame'
+                ).length : 0;
+            trackAutoReplace(selectedScope, unresolvedCount);
+            
+            // Hide dialog
+            hideAutoReplaceDialog();
+            
+            // Show loading state
+            elements.consolidateButton.disabled = true;
+            elements.consolidateButton.textContent = 'Replacing...';
+            
+            // Send consolidation request with scope
+            parent.postMessage({ 
+                pluginMessage: { 
+                    type: 'consolidate-icons',
+                    icons: iconData.discoveredIcons,
+                    scope: selectedScope,
+                    currentPageName: currentPageName
+                } 
+            }, '*');
+        }
+
+        // Success Dialog Functions
+        function showSuccessDialog(message) {
+            const dialog = document.getElementById('successDialog');
+            const successMessage = document.getElementById('successMessage');
+            
+            successMessage.textContent = message;
+            dialog.classList.add('show');
+        }
+
+        function hideSuccessDialog() {
+            const dialog = document.getElementById('successDialog');
+            dialog.classList.remove('show');
+        }
+
+        function triggerRefreshScan() {
+            // Hide success dialog
+            hideSuccessDialog();
+            
+            // Stop existing timer before starting new scan
+            stopNewStatusCleanupTimer();
+            
+            // Trigger a new scan
+            setButtonLoading(elements.scanButton);
+            showProgress(true);
+            updateProgress(0);
+            
+            parent.postMessage({ 
+                pluginMessage: { type: 'scan-icons' } 
+            }, '*');
+        }
+
+        // Consolidate Dups Dialog Functions
+        function showConsolidateDupsDialog() {
+            const dialog = document.getElementById('consolidateDupsDialog');
+            const duplicateCountEl = document.getElementById('duplicateCount');
+            const keepCountEl = document.getElementById('keepCount');
+            
+            if (!iconData.discoveredIcons || !isOnIconLibraryPage()) {
+                return;
+            }
+            
+            // Get duplicates on the Icon Library page
+            const libraryIcons = iconData.discoveredIcons.filter(icon => icon.page === currentPageName);
+            const duplicates = libraryIcons.filter(icon => icon.isDuplicate);
+            
+            // Calculate how many unique icons we'll keep vs remove
+            const duplicateGroups = new Map();
+            duplicates.forEach(icon => {
+                const basePattern = icon.name.toLowerCase()
+                    .replace(/[-_\s\.]/g, '')
+                    .replace(/\d+/g, '')
+                    .replace(/\s*copy\s*\d*/i, '')
+                    .trim();
+                const sizeKey = `${icon.width}x${icon.height}`;
+                const groupKey = `${basePattern}_${sizeKey}`;
+                
+                if (!duplicateGroups.has(groupKey)) {
+                    duplicateGroups.set(groupKey, []);
+                }
+                duplicateGroups.get(groupKey).push(icon);
+            });
+            
+            // Count: keep 1 per group, remove the rest
+            let toKeep = duplicateGroups.size;
+            let toRemove = duplicates.length - toKeep;
+            
+            duplicateCountEl.textContent = toRemove;
+            keepCountEl.textContent = toKeep;
+            
+            dialog.classList.add('show');
+        }
+
+        function hideConsolidateDupsDialog() {
+            const dialog = document.getElementById('consolidateDupsDialog');
+            dialog.classList.remove('show');
+        }
+
+        function executeConsolidateDups() {
+            // Hide dialog
+            hideConsolidateDupsDialog();
+            
+            // Show loading state on banner button
+            const bannerButton = document.getElementById('consolidateDupsButton');
+            if (bannerButton) {
+                bannerButton.disabled = true;
+                bannerButton.textContent = 'Consolidating...';
+            }
+            
+            // Send consolidation request
+            parent.postMessage({ 
+                pluginMessage: { 
+                    type: 'consolidate-library-duplicates',
+                    icons: iconData.discoveredIcons,
+                    currentPageName: currentPageName
+                } 
+            }, '*');
+        }
+
+        // Icon Swap Dialog Functions
+        let currentSwapIcon = null;
+        let selectedReplacementIcon = null;
+        let swapIconsData = [];
+        
+
+
+        function showIconSwapDialog(icon) {
+            currentSwapIcon = icon;
+            selectedReplacementIcon = null;
+            
+            // Update current icon display
+            document.getElementById('currentSwapName').textContent = icon.name;
+            document.getElementById('currentSwapDetails').textContent = `${icon.width}×${icon.height} • ${icon.page}`;
+            
+            if (icon.preview) {
+                document.getElementById('currentSwapImage').innerHTML = `<img src="${icon.preview}" alt="${icon.name}">`;
+            } else {
+                document.getElementById('currentSwapImage').innerHTML = '<div class="swap-placeholder">No preview available</div>';
+            }
+            
+            // Reset new icon display
+            document.getElementById('newSwapImage').innerHTML = '<div class="swap-placeholder">Select a replacement icon from the grid below</div>';
+            document.getElementById('newSwapName').textContent = 'Choose replacement...';
+            document.getElementById('newSwapDetails').textContent = 'Select from available icons';
+            
+            // Get available icons for replacement (exclude current icon and archived icons)
+            // Include both master components AND potential icon-like elements
+            swapIconsData = iconData.discoveredIcons.filter(availableIcon => 
+                availableIcon && 
+                availableIcon.id && 
+                availableIcon.id !== icon.id &&
+                !availableIcon.name.toLowerCase().startsWith('archive/') && // Exclude archived icons
+                (
+                    availableIcon.status === 'master' || 
+                    availableIcon.status === 'master-component' ||
+                    availableIcon.status === 'unresolved' // Include frames, groups, vectors that could be icons
+                )
+            );
+            
+            // Populate swap icon grid
+            populateSwapIconGrid();
+            
+            // Reset search
+            document.getElementById('swapSearchInput').value = '';
+            
+            // Reset and hide all dynamic sections
+            document.getElementById('swapSizing').style.display = 'none';
+            document.getElementById('swapConversion').style.display = 'none';
+            document.getElementById('swapImpact').style.display = 'none';
+            
+            // Reset button state
+            const confirmButton = document.getElementById('confirmIconSwap');
+            const buttonText = document.getElementById('swapButtonText');
+            confirmButton.disabled = true;
+            buttonText.textContent = 'Select an icon to continue';
+            
+            // Show dialog
+            document.getElementById('iconSwapDialog').classList.add('show');
+        }
+
+        function hideIconSwapDialog() {
+            document.getElementById('iconSwapDialog').classList.remove('show');
+            currentSwapIcon = null;
+            selectedReplacementIcon = null;
+            swapIconsData = [];
+        }
+
+        function populateSwapIconGrid() {
+            const swapIconGrid = document.getElementById('swapIconGrid');
+            const swapIconCount = document.getElementById('swapIconCount');
+            
+            swapIconGrid.innerHTML = '';
+            
+            if (swapIconsData.length === 0) {
+                swapIconCount.textContent = 'No icons available';
+                swapIconGrid.innerHTML = `
+                    <div class="swap-empty-state">
+                        <h4>No replacement options found</h4>
+                        <p>Try running a scan first to discover more icons and components in your file.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Update status bar
+            const componentCount = swapIconsData.filter(icon => icon.status !== 'unresolved').length;
+            const needsConversionCount = swapIconsData.filter(icon => icon.status === 'unresolved').length;
+            
+            swapIconCount.textContent = `${swapIconsData.length} options available`;
+            
+            swapIconsData.forEach(icon => {
+                const slot = document.createElement('div');
+                slot.className = 'swap-icon-slot';
+                slot.dataset.iconId = icon.id;
+                
+                // Add visual indicator for status
+                if (icon.status === 'unresolved') {
+                    slot.classList.add('needs-conversion');
+                }
+                
+                // Create status indicator with better icons
+                const statusIndicator = icon.status === 'unresolved' 
+                    ? '<div class="swap-status-badge">📦</div>' 
+                    : '<div class="swap-status-badge component">✓</div>';
+                
+                // Create detailed tooltip
+                const tooltipText = icon.status === 'unresolved' 
+                    ? `${icon.name}\n${icon.width}×${icon.height} • ${icon.page}\nWill be converted to master component`
+                    : `${icon.name}\n${icon.width}×${icon.height} • ${icon.page}\nReady to use as-is`;
+                
+                if (icon.preview) {
+                    slot.innerHTML = `
+                        <img src="${icon.preview}" alt="${icon.name}">
+                        ${statusIndicator}
+                        <div class="tooltip">${tooltipText}</div>
+                    `;
+                } else {
+                    slot.innerHTML = `
+                        <div style="font-size: 9px; color: #999; text-align: center; padding: 4px;">${icon.name.substring(0, 6)}</div>
+                        ${statusIndicator}
+                        <div class="tooltip">${tooltipText}</div>
+                    `;
+                }
+                
+                slot.addEventListener('click', () => {
+                    selectReplacementIcon(icon);
+                });
+                swapIconGrid.appendChild(slot);
+            });
+        }
+
+        function selectReplacementIcon(icon) {
+            try {
+                selectedReplacementIcon = icon;
+                
+                // Update visual selection
+                document.querySelectorAll('.swap-icon-slot').forEach(slot => {
+                    slot.classList.remove('selected');
+                });
+                
+                const selectedSlot = document.querySelector(`[data-icon-id="${icon.id}"]`);
+                if (selectedSlot) {
+                    selectedSlot.classList.add('selected');
+                }
+                
+                // Update new icon display
+                const newSwapName = document.getElementById('newSwapName');
+                const newSwapDetails = document.getElementById('newSwapDetails');
+                const newSwapImage = document.getElementById('newSwapImage');
+                
+                if (newSwapName) newSwapName.textContent = icon.name;
+                
+                // Add status indicator to details with better formatting
+                const statusText = icon.status === 'unresolved' ? ' (will be converted)' : ' (ready to use)';
+                if (newSwapDetails) {
+                    newSwapDetails.textContent = `${icon.width}×${icon.height} • ${icon.page}${statusText}`;
+                }
+                
+                if (newSwapImage) {
+                    if (icon.preview) {
+                        newSwapImage.innerHTML = `<img src="${icon.preview}" alt="${icon.name}">`;
+                    } else {
+                        newSwapImage.innerHTML = '<div class="swap-placeholder">No preview available</div>';
+                    }
+                }
+                
+                // Show/hide conversion notice for non-components
+                const conversionEl = document.getElementById('swapConversion');
+                if (conversionEl) {
+                    if (icon.status === 'unresolved') {
+                        conversionEl.style.display = 'block';
+                        
+                        // Generate component name for conversion (use a fallback since figma object isn't available in UI)
+                        const componentName = `Design System/${icon.name}`;
+                        const conversionNameEl = document.getElementById('conversionComponentName');
+                        if (conversionNameEl) {
+                            conversionNameEl.textContent = componentName;
+                        }
+                    } else {
+                        conversionEl.style.display = 'none';
+                    }
+                }
+                
+                // Show/hide sizing controls if dimensions don't match
+                const sizingEl = document.getElementById('swapSizing');
+                if (sizingEl && currentSwapIcon) {
+                    const hasSizeDifference = Math.abs(currentSwapIcon.width - icon.width) > 2 || 
+                                            Math.abs(currentSwapIcon.height - icon.height) > 2;
+                    
+                    if (hasSizeDifference) {
+                        const currentIconSize = document.getElementById('currentIconSize');
+                        const replacementIconSize = document.getElementById('replacementIconSize');
+                        
+                        if (currentIconSize) currentIconSize.textContent = `${currentSwapIcon.width}×${currentSwapIcon.height}`;
+                        if (replacementIconSize) replacementIconSize.textContent = `${icon.width}×${icon.height}`;
+                        
+                        sizingEl.style.display = 'block';
+                        
+                        // Intelligent default selection based on size comparison
+                        const currentArea = currentSwapIcon.width * currentSwapIcon.height;
+                        const replacementArea = icon.width * icon.height;
+                        const shouldScaleToFit = replacementArea > currentArea * 1.5; // Scale down if replacement is significantly larger
+                        
+                        const scaleRadio = document.querySelector('input[value="scale-to-fit"]');
+                        const keepRadio = document.querySelector('input[value="keep-original"]');
+                        
+                        if (scaleRadio && keepRadio) {
+                            if (shouldScaleToFit) {
+                                scaleRadio.checked = true;
+                            } else {
+                                keepRadio.checked = true;
+                            }
+                        }
+                    } else {
+                        sizingEl.style.display = 'none';
+                    }
+                }
+                
+                // Calculate and show impact
+                calculateSwapImpact();
+                
+                // Update button text and enable
+                const confirmButton = document.getElementById('confirmIconSwap');
+                const buttonText = document.getElementById('swapButtonText');
+                
+                if (confirmButton && buttonText) {
+                    if (icon.status === 'unresolved') {
+                        buttonText.textContent = 'Convert & Swap Icons';
+                    } else {
+                        buttonText.textContent = 'Swap Icons';
+                    }
+                    
+                    confirmButton.disabled = false;
+                }
+                
+            } catch (error) {
+                showStatus('Error selecting replacement icon: ' + error.message, 'error');
+            }
+        }
+
+        function calculateSwapImpact() {
+            if (!currentSwapIcon || !selectedReplacementIcon) return;
+            
+            // Calculate instances that would be affected
+            // Include the master itself plus all its instances
+            let instancesCount = 1; // The master component itself
+            const affectedPages = new Set();
+            affectedPages.add(currentSwapIcon.page); // Page containing the master
+            
+            iconData.discoveredIcons.forEach(icon => {
+                if (icon.masterComponentId === currentSwapIcon.id) {
+                    instancesCount++;
+                    affectedPages.add(icon.page);
+                }
+            });
+            
+            // Update impact display with better context
+            document.getElementById('swapInstanceCount').textContent = instancesCount;
+            document.getElementById('swapPageCount').textContent = affectedPages.size;
+            
+            // Show the impact section
+            document.getElementById('swapImpact').style.display = 'block';
+        }
+
+        function filterSwapIcons(searchTerm) {
+            const filtered = swapIconsData.filter(icon => 
+                icon.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+                !icon.name.toLowerCase().startsWith('archive/')
+            );
+            
+            const swapIconGrid = document.getElementById('swapIconGrid');
+            const swapIconCount = document.getElementById('swapIconCount');
+            
+            swapIconGrid.innerHTML = '';
+            
+            if (filtered.length === 0) {
+                swapIconCount.textContent = `No results for "${searchTerm}"`;
+                swapIconGrid.innerHTML = `
+                    <div class="swap-empty-state">
+                        <h4>No icons match "${searchTerm}"</h4>
+                        <p>Try a different search term or browse all available icons.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Update count with search context
+            if (searchTerm.trim()) {
+                swapIconCount.textContent = `${filtered.length} of ${swapIconsData.length} icons found`;
+            } else {
+                swapIconCount.textContent = `${swapIconsData.length} options available`;
+            }
+            
+            filtered.forEach(icon => {
+                const slot = document.createElement('div');
+                slot.className = 'swap-icon-slot';
+                slot.dataset.iconId = icon.id;
+                
+                // Add visual indicator for status
+                if (icon.status === 'unresolved') {
+                    slot.classList.add('needs-conversion');
+                }
+                
+                if (selectedReplacementIcon && selectedReplacementIcon.id === icon.id) {
+                    slot.classList.add('selected');
+                }
+                
+                // Create status indicator with better icons
+                const statusIndicator = icon.status === 'unresolved' 
+                    ? '<div class="swap-status-badge">📦</div>' 
+                    : '<div class="swap-status-badge component">✓</div>';
+                
+                // Create detailed tooltip
+                const tooltipText = icon.status === 'unresolved' 
+                    ? `${icon.name}\n${icon.width}×${icon.height} • ${icon.page}\nWill be converted to master component`
+                    : `${icon.name}\n${icon.width}×${icon.height} • ${icon.page}\nReady to use as-is`;
+                
+                if (icon.preview) {
+                    slot.innerHTML = `
+                        <img src="${icon.preview}" alt="${icon.name}">
+                        ${statusIndicator}
+                        <div class="tooltip">${tooltipText}</div>
+                    `;
+                } else {
+                    slot.innerHTML = `
+                        <div style="font-size: 9px; color: #999; text-align: center; padding: 4px;">${icon.name.substring(0, 6)}</div>
+                        ${statusIndicator}
+                        <div class="tooltip">${tooltipText}</div>
+                    `;
+                }
+                
+                slot.addEventListener('click', () => {
+                    selectReplacementIcon(icon);
+                });
+                swapIconGrid.appendChild(slot);
+            });
+        }
+
+        function executeIconSwap() {
+            if (!currentSwapIcon) {
+                showStatus('Error: No original icon selected', 'error');
+                return;
+            }
+            
+            if (!selectedReplacementIcon) {
+                showStatus('Error: Please select a replacement icon first', 'error');
+                return;
+            }
+            
+            // Get sizing preference
+            const sizingMode = document.querySelector('input[name="sizingMode"]:checked')?.value || 'scale-to-fit';
+            const isConversion = selectedReplacementIcon.status === 'unresolved';
+            
+            // Track icon swap usage
+            trackIconSwap(isConversion, sizingMode);
+            
+            // Store the icon references BEFORE hiding the dialog (which clears the variables)
+            const originalIconRef = currentSwapIcon;
+            const replacementIconRef = selectedReplacementIcon;
+            
+            // Hide dialog
+            hideIconSwapDialog();
+            
+            // Show loading state
+            const statusMessage = isConversion ? 'Converting to component and swapping icons...' : 'Swapping icons...';
+            showStatus(statusMessage, 'info');
+            
+            // Send swap request using the stored references
+            const swapMessage = {
+                type: 'swap-icons',
+                originalIcon: originalIconRef,
+                replacementIcon: replacementIconRef,
+                sizingMode: sizingMode,
+                needsConversion: isConversion
+            };
+            
+            // Validate the message before sending
+            if (!originalIconRef || !replacementIconRef) {
+                showStatus('Error: Invalid swap request - missing icon data', 'error');
+                return;
+            }
+            
+            parent.postMessage({ 
+                pluginMessage: swapMessage
+            }, '*');
+        }
+
+        // Event Listeners
+        elements.searchInput.addEventListener('input', (e) => {
+            elements.addButton.disabled = e.target.value.trim() === '';
+            searchFilter = e.target.value.trim();
+            populateIcons(); // Re-populate with search filter
+        });
+
+        // Close details panel
+        document.getElementById('closeDetails').addEventListener('click', () => {
+            elements.detailsPanel.classList.remove('show');
+            document.querySelector('.content').classList.remove('with-details');
+            
+            // Clear selection
+            document.querySelectorAll('.icon-slot, .list-item').forEach(el => {
+                el.classList.remove('selected');
+            });
+            selectedIcon = null;
+        });
+
+        // Swap icon button
+        document.getElementById('swapIconButton').addEventListener('click', () => {
+            if (selectedIcon) {
+                showIconSwapDialog(selectedIcon);
+            }
+        });
+
+        // Filter chip handlers
+        document.getElementById('currentPageChip').addEventListener('click', () => {
+            currentPageFilter = !currentPageFilter;
+            updateFilterChipState('currentPageChip', currentPageFilter);
+            populateIcons();
+            
+            trackFilterUsed('current_page');
+        });
+
+        document.getElementById('unresolvedChip').addEventListener('click', () => {
+            unresolvedOnlyFilter = !unresolvedOnlyFilter;
+            updateFilterChipState('unresolvedChip', unresolvedOnlyFilter);
+            populateIcons();
+            
+            trackFilterUsed('unresolved_only');
+        });
+
+        document.getElementById('libraryNamesChip').addEventListener('click', () => {
+            libraryNamesOnlyFilter = !libraryNamesOnlyFilter;
+            updateFilterChipState('libraryNamesChip', libraryNamesOnlyFilter);
+            populateIcons();
+            
+            trackFilterUsed('library_names');
+        });
+
+        function updateFilterChipState(chipId, isActive) {
+            const chip = document.getElementById(chipId);
+            if (isActive) {
+                chip.classList.add('active');
+            } else {
+                chip.classList.remove('active');
+            }
+        }
+
+        // Clear all filters when clicking on filter summary
+        elements.filterSummary.addEventListener('click', () => {
+            if (elements.filterSummary.textContent) {
+                // Reset all filters
+                searchFilter = '';
+                currentPageFilter = false;
+                unresolvedOnlyFilter = false;
+                libraryNamesOnlyFilter = false;
+                
+                // Reset UI
+                elements.searchInput.value = '';
+                updateFilterChipState('currentPageChip', false);
+                updateFilterChipState('unresolvedChip', false);
+                updateFilterChipState('libraryNamesChip', false);
+                
+                populateIcons();
+            }
+        });
+
+        elements.viewButtons.forEach(btn => {
+            btn.addEventListener('click', () => switchView(btn.dataset.view));
+        });
+
+        elements.scanButton.addEventListener('click', () => {
+            // Stop existing timer before starting new scan
+            stopNewStatusCleanupTimer();
+            
+            setButtonLoading(elements.scanButton);
+            showProgress(true);
+            updateProgress(0);
+            
+            trackScanStarted(1); // Track manual scan
+            
+            parent.postMessage({ 
+                pluginMessage: { type: 'scan-icons' } 
+            }, '*');
+        });
+
+        elements.consolidateButton.addEventListener('click', () => {
+            if (iconData.scanComplete) {
+                showAutoReplaceDialog();
+            }
+        });
+
+        elements.reviewButton.addEventListener('click', () => {
+            if (iconData.scanComplete) {
+                parent.postMessage({ 
+                    pluginMessage: { 
+                        type: 'create-review-page',
+                        icons: iconData.discoveredIcons 
+                    } 
+                }, '*');
+            }
+        });
+
+        // Dialog Event Listeners
+        document.querySelectorAll('.scope-option').forEach(option => {
+            option.addEventListener('click', () => {
+                selectScopeOption(option.dataset.scope);
+            });
+        });
+
+        document.getElementById('cancelReplace').addEventListener('click', () => {
+            hideAutoReplaceDialog();
+        });
+
+        document.getElementById('confirmReplace').addEventListener('click', () => {
+            executeAutoReplace();
+        });
+
+        // Close dialog when clicking overlay
+        document.getElementById('autoReplaceDialog').addEventListener('click', (e) => {
+            if (e.target.id === 'autoReplaceDialog') {
+                hideAutoReplaceDialog();
+            }
+        });
+
+        // Success Dialog Event Listeners
+        document.getElementById('refreshAndScan').addEventListener('click', () => {
+            triggerRefreshScan();
+        });
+
+        document.getElementById('skipRefresh').addEventListener('click', () => {
+            hideSuccessDialog();
+        });
+
+        document.getElementById('closeSuccess').addEventListener('click', () => {
+            hideSuccessDialog();
+        });
+
+        // Close success dialog when clicking overlay
+        document.getElementById('successDialog').addEventListener('click', (e) => {
+            if (e.target.id === 'successDialog') {
+                hideSuccessDialog();
+            }
+        });
+
+        // Consolidate Dups Dialog Event Listeners
+        document.getElementById('cancelConsolidateDups').addEventListener('click', () => {
+            hideConsolidateDupsDialog();
+        });
+
+        document.getElementById('confirmConsolidateDups').addEventListener('click', () => {
+            executeConsolidateDups();
+        });
+
+        // Close consolidate dups dialog when clicking overlay
+        document.getElementById('consolidateDupsDialog').addEventListener('click', (e) => {
+            if (e.target.id === 'consolidateDupsDialog') {
+                hideConsolidateDupsDialog();
+            }
+        });
+
+        // Icon Swap Dialog Event Listeners
+        document.getElementById('cancelIconSwap').addEventListener('click', () => {
+            hideIconSwapDialog();
+        });
+
+        document.getElementById('confirmIconSwap').addEventListener('click', () => {
+            if (!selectedReplacementIcon) {
+                showStatus('Error: No replacement icon selected', 'error');
+                return;
+            }
+            
+            executeIconSwap();
+        });
+
+        // Close icon swap dialog when clicking overlay
+        document.getElementById('iconSwapDialog').addEventListener('click', (e) => {
+            if (e.target.id === 'iconSwapDialog') {
+                hideIconSwapDialog();
+            }
+        });
+
+        // Swap search input
+        document.getElementById('swapSearchInput').addEventListener('input', (e) => {
+            filterSwapIcons(e.target.value);
+        });
+
+        // Onboarding event listeners
+        document.getElementById('onboardingNext').addEventListener('click', nextOnboardingStep);
+        document.getElementById('onboardingSkip').addEventListener('click', skipOnboarding);
+        document.getElementById('onboardingClose').addEventListener('click', skipOnboarding);
+
+        // Settings event listeners
+        document.getElementById('settingsButton').addEventListener('click', showSettingsModal);
+        document.getElementById('settingsClose').addEventListener('click', hideSettingsModal);
+        document.getElementById('replayTutorial').addEventListener('click', () => {
+            hideSettingsModal();
+            showOnboarding();
+        });
+
+        // Close settings modal when clicking outside
+        document.getElementById('settingsModal').addEventListener('click', (e) => {
+            if (e.target.id === 'settingsModal') {
+                hideSettingsModal();
+            }
+        });
+
+        // Handle messages from plugin
+        window.addEventListener('message', (event) => {
+            const { type, data } = event.data.pluginMessage || {};
+
+            switch (type) {
+                case 'scan-progress':
+                    updateProgress(data.percentage);
+                    break;
+                    
+                case 'page-changed-scanning':
+                    // Show that we're automatically scanning due to page change
+                    showProgress(true);
+                    updateProgress(0);
+                    setButtonLoading(elements.scanButton);
+                    showStatus(data.message, 'info');
+                    
+                    // Update page name immediately
+                    if (data.newPageName) {
+                        currentPageName = data.newPageName;
+                        elements.currentPageName.textContent = data.newPageName;
+                        updateMode(); // Update mode based on new page
+                    }
+                    break;
+
+                case 'scan-complete':
+                    iconData = { ...iconData, ...data, scanComplete: true };
+                    
+                    // Add timestamps to any new icons
+                    if (iconData.discoveredIcons) {
+                        iconData.discoveredIcons.forEach(icon => {
+                            if (icon.isNew && !icon.newTimestamp) {
+                                markIconAsNew(icon);
+                            }
+                        });
+                    }
+                    
+                    // Update current page name and mode
+                    if (data.currentPageName) {
+                        currentPageName = data.currentPageName;
+                        elements.currentPageName.textContent = data.currentPageName;
+                        updateMode(); // This will update UI and stats based on mode
+                    }
+                    
+                    // Track scan completion
+                    const scannedIcons = iconData.discoveredIcons ? iconData.discoveredIcons.filter(icon => icon && icon.id) : [];
+                    const scannedUnresolvedCount = scannedIcons.filter(icon => icon.status === 'unresolved' || icon.status === 'in-frame').length;
+                    trackScanCompleted(scannedIcons.length, scannedUnresolvedCount, 1);
+                    
+                    showProgress(false);
+                    setButtonLoading(elements.scanButton, false);
+                    elements.consolidateButton.disabled = false;
+                    elements.reviewButton.disabled = false;
+                    
+                    // Show appropriate status message based on mode and scan type
+                    const validIcons = iconData.discoveredIcons ? iconData.discoveredIcons.filter(icon => icon && icon.id) : [];
+                    const isAutoScan = data.autoScan;
+                    const autoScanPrefix = isAutoScan ? `Page "${currentPageName}": ` : '';
+                    
+                    if (currentMode === 'library') {
+                        const libraryIcons = validIcons.filter(icon => icon.page === currentPageName);
+                        const duplicateCount = libraryIcons.filter(icon => icon.isDuplicate).length;
+                        
+                        if (libraryIcons.length > 0) {
+                            if (duplicateCount > 0) {
+                                showStatus(`✨ ${autoScanPrefix}Scan complete! Found ${libraryIcons.length} components with ${duplicateCount} duplicates ready to consolidate`, 'success');
+                            } else {
+                                showStatus(`✅ ${autoScanPrefix}Scan complete! Found ${libraryIcons.length} components - your library is perfectly organized!`, 'success');
+                            }
+                        } else {
+                            showStatus(`📋 ${autoScanPrefix}Scan complete! Icon Library is empty - use Auto-Replace from other pages to populate it`, 'info');
+                        }
+                    } else {
+                        const unresolvedCount = validIcons.filter(icon => icon.status === 'unresolved' || icon.status === 'in-frame').length;
+                        const masterCount = validIcons.filter(icon => icon.status === 'master' || icon.status === 'master-component').length;
+                        
+                        if (validIcons.length > 0) {
+                            if (unresolvedCount > 0) {
+                                showStatus(`🎯 ${autoScanPrefix}Scan complete! Found ${validIcons.length} icons (${masterCount} organized, ${unresolvedCount} ready for auto-replace)`, 'success');
+                            } else {
+                                showStatus(`✅ ${autoScanPrefix}Scan complete! All ${validIcons.length} icons are perfectly organized in your design system!`, 'success');
+                            }
+                        } else {
+                            showStatus(`📋 ${autoScanPrefix}Scan complete! No icons found on this page - try scanning other pages or add some icons`, 'info');
+                        }
+                    }
+                    
+                    // Start cleanup timer for new status expiry
+                    startNewStatusCleanupTimer();
+                    
+                    populateIcons();
+                    break;
+
+                case 'scan-error':
+                    showProgress(false);
+                    setButtonLoading(elements.scanButton, false);
+                    showStatus('Error scanning icons: ' + (data.error || 'Unknown error'), 'error');
+                    break;
+
+                case 'review-page-created':
+                    showStatus('Review page created successfully', 'success');
+                    break;
+
+                case 'review-page-error':
+                    showStatus('Error creating review page: ' + (data.error || 'Unknown error'), 'error');
+                    break;
+
+                case 'consolidation-complete':
+                    elements.consolidateButton.disabled = false;
+                    elements.consolidateButton.textContent = 'Auto-Replace Icons';
+                    
+                    // Mark any newly created components as "new" with timestamp
+                    if (data.newMasterComponents && iconData.discoveredIcons) {
+                        data.newMasterComponents.forEach(newComponentId => {
+                            const icon = iconData.discoveredIcons.find(icon => icon.id === newComponentId);
+                            if (icon) {
+                                markIconAsNew(icon);
+                            }
+                        });
+                        
+                        // Refresh UI to show new tags
+                        populateIcons();
+                    }
+                    
+                    // Show success dialog with refresh prompt instead of auto-scanning
+                    if (data.componentsCreated > 0) {
+                        const iconsReplaced = data.iconsReplaced || 0;
+                        const pagesAffected = data.pagesAffected || 0;
+                        
+                        let successMessage = `🎉 Auto-Replace complete! Created ${data.componentsCreated} new master component${data.componentsCreated > 1 ? 's' : ''}`;
+                        if (iconsReplaced > 0) {
+                            successMessage += ` and replaced ${iconsReplaced} unresolved icon${iconsReplaced > 1 ? 's' : ''}`;
+                        }
+                        if (pagesAffected > 0) {
+                            successMessage += ` across ${pagesAffected} page${pagesAffected > 1 ? 's' : ''}`;
+                        }
+                        successMessage += '. Your design system is now more organized!';
+                        
+                        showSuccessDialog(successMessage);
+                    } else {
+                        showStatus('ℹ️ Auto-Replace complete! No unresolved icons were found to replace', 'info');
+                    }
+                    break;
+
+                case 'consolidation-error':
+                    elements.consolidateButton.disabled = false;
+                    elements.consolidateButton.textContent = 'Auto-Replace Icons';
+                    showStatus('Error replacing icons: ' + (data.error || 'Unknown error'), 'error');
+                    break;
+
+                case 'library-consolidation-complete':
+                    // Re-populate to update banner state
+                    populateIcons();
+                    
+                    if (data.duplicatesRemoved > 0) {
+                        if (data.errors && data.errors > 0) {
+                            // Show partial success with error details
+                            const errorSummary = data.errorDetails && data.errorDetails.length > 0 
+                                ? `\n\nErrors encountered:\n${data.errorDetails.slice(0, 5).join('\n')}${data.errorDetails.length > 5 ? '\n...and more' : ''}`
+                                : '';
+                            showStatus(`⚠️ Partial success: Consolidated ${data.duplicatesRemoved} duplicate${data.duplicatesRemoved > 1 ? 's' : ''} with ${data.errors} error${data.errors > 1 ? 's' : ''}${errorSummary}`, 'warning');
+                            console.error('Consolidation errors:', data.errorDetails);
+                        } else {
+                            const duplicatesRemoved = data.duplicatesRemoved;
+                            const successMessage = `🧹 Library consolidation complete! Removed ${duplicatesRemoved} duplicate component${duplicatesRemoved > 1 ? 's' : ''} from your Icon Library. Your library is now cleaner and more organized!`;
+                            showSuccessDialog(successMessage);
+                        }
+                    } else {
+                        if (data.errors && data.errors > 0) {
+                            showStatus(`❌ Consolidation failed: ${data.errors} errors occurred. Check console for details.`, 'error');
+                            console.error('Consolidation errors:', data.errorDetails);
+                        } else {
+                            showStatus('✅ Library consolidation complete! No duplicates were found - your library is already perfectly organized!', 'info');
+                        }
+                    }
+                    break;
+
+                case 'library-consolidation-error':
+                    // Re-populate to update banner state
+                    populateIcons();
+                    showStatus('Error consolidating duplicates: ' + (data.error || 'Unknown error'), 'error');
+                    break;
+
+                case 'canvas-selection-changed':
+                    if (data.nodeId && iconData.discoveredIcons) {
+                        isSelectingFromCanvas = true;
+                        selectIconById(data.nodeId);
+                        setTimeout(() => {
+                            isSelectingFromCanvas = false;
+                        }, 100);
+                    }
+                    break;
+
+                case 'icon-renamed':
+                    showStatus(data.message || 'Icon renamed successfully', 'success');
+                    
+                    // Update the icon in our data if it exists
+                    if (iconData.discoveredIcons && selectedIcon && selectedIcon.id === data.iconId) {
+                        selectedIcon.name = data.newName;
+                        elements.selectedIconName.textContent = data.newName;
+                        
+                        // Update in discoveredIcons array
+                        const iconIndex = iconData.discoveredIcons.findIndex(icon => icon.id === data.iconId);
+                        if (iconIndex !== -1) {
+                            iconData.discoveredIcons[iconIndex].name = data.newName;
+                            populateIcons(); // Refresh the grid to show new name
+                        }
+                    }
+                    break;
+
+                case 'rename-error':
+                    showStatus('Error renaming icon: ' + (data.error || 'Unknown error'), 'error');
+                    break;
+
+                case 'relaunch-set':
+                    showStatus(data.message || 'Right-click the icon and select "Rename" to use Figma AI', 'info');
+                    break;
+
+                case 'relaunch-error':
+                    showStatus('Error setting up Figma AI rename: ' + (data.error || 'Unknown error'), 'error');
+                    break;
+
+                case 'icon-swap-complete':
+                    const swapMessage = data.message || 'Icons swapped successfully';
+                    const instancesUpdated = data.instancesUpdated || 0;
+                    const pagesAffected = data.pagesAffected || 0;
+                    
+                    // Create more informative success message
+                    let detailedMessage = `🔄 ${swapMessage}`;
+                    if (instancesUpdated > 0) {
+                        detailedMessage += ` • ${instancesUpdated} instances updated`;
+                    }
+                    if (pagesAffected > 0) {
+                        detailedMessage += ` across ${pagesAffected} page${pagesAffected > 1 ? 's' : ''}`;
+                    }
+                    
+                    showStatus(detailedMessage, 'success');
+                    
+                    // Refresh the scan to update the UI with new state
+                    setTimeout(() => {
+                        setButtonLoading(elements.scanButton);
+                        showProgress(true);
+                        updateProgress(0);
+                        
+                        parent.postMessage({ 
+                            pluginMessage: { type: 'scan-icons' } 
+                        }, '*');
+                    }, 1500); // Slightly longer delay to let user read the success message
+                    break;
+
+                case 'icon-swap-error':
+                    showStatus('Error swapping icons: ' + (data.error || 'Unknown error'), 'error');
+                    break;
+
+                case 'onboarding-state':
+                    onboardingCompleted = data.completed || false;
+                    // Show onboarding if not completed and not already shown
+                    if (!onboardingCompleted && !document.getElementById('onboardingOverlay').classList.contains('show')) {
+                        setTimeout(() => {
+                            showOnboarding();
+                        }, 1000); // Show onboarding after 1 second
+                    }
+                    break;
+            }
+        });
+
+        // Analytics System
+        function trackEvent(eventName, properties = {}) {
+            try {
+                // Send to Google Analytics 4 if available
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', eventName, {
+                        ...properties,
+                        plugin_version: '1.0',
+                        timestamp: Date.now()
+                    });
+                }
+
+                // Send to custom analytics endpoint (optional)
+                const analyticsEndpoint = 'https://api.iconmanagement.app/analytics';
+                if (analyticsEndpoint && navigator.onLine) {
+                    fetch(analyticsEndpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            event: eventName,
+                            properties: {
+                                ...properties,
+                                plugin_version: '1.0',
+                                timestamp: Date.now(),
+                                user_id: getOrCreateUserId()
+                            }
+                        })
+                    }).catch(() => {
+                        // Silently handle analytics errors
+                    });
+                }
+            } catch (error) {
+                // Silently handle analytics errors
+            }
+        }
+
+        function getOrCreateUserId() {
+            // In Figma plugin context, always generate a session-based ID
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Track key user actions
+        function trackScanStarted(pageCount) {
+            trackEvent('scan_started', { page_count: pageCount });
+        }
+
+        function trackScanCompleted(iconCount, unresolvedCount, pageCount) {
+            trackEvent('scan_completed', { 
+                icon_count: iconCount, 
+                unresolved_count: unresolvedCount,
+                page_count: pageCount
+            });
+        }
+
+        function trackAutoReplace(scope, iconsReplaced) {
+            trackEvent('auto_replace_used', { 
+                scope: scope, 
+                icons_replaced: iconsReplaced 
+            });
+        }
+
+        function trackIconSwap(needsConversion, sizingMode) {
+            trackEvent('icon_swap_used', { 
+                needs_conversion: needsConversion, 
+                sizing_mode: sizingMode 
+            });
+        }
+
+        function trackFilterUsed(filterType) {
+            trackEvent('filter_used', { filter_type: filterType });
+        }
+
+        function trackOnboardingStep(step, action) {
+            trackEvent('onboarding_step', { 
+                step: step, 
+                action: action 
+            });
+        }
+
+        // Initialize
+        updateStats();
+        showProgress(false);
+        elements.scanResults.classList.add('show');
+        updateMode(); // Set initial mode based on current page
+
+        // Track plugin initialization
+        trackEvent('plugin_opened');
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                // Close any open dialogs
+                hideAutoReplaceDialog();
+                hideSuccessDialog();
+                hideConsolidateDupsDialog();
+            }
+        });
+        
+        // Cleanup timer when plugin closes
+        window.addEventListener('beforeunload', () => {
+            stopNewStatusCleanupTimer();
+        });
+        
+        // Request onboarding state from backend on plugin load
+        parent.postMessage({ 
+            pluginMessage: { type: 'get-onboarding-state' } 
+        }, '*');
+
+        // Auto-scan on plugin open (initial scan)
+        setTimeout(() => {
+            // Stop any existing timer before auto-scan
+            stopNewStatusCleanupTimer();
+            
+            setButtonLoading(elements.scanButton);
+            showProgress(true);
+            updateProgress(0);
+            showStatus('Loading plugin - scanning current page...', 'info');
+            
+            parent.postMessage({ 
+                pluginMessage: { type: 'scan-icons' } 
+            }, '*');
+        }, 500); // Small delay to ensure UI is ready
+</script>
+</body>
+</html>
