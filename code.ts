@@ -866,15 +866,68 @@ async function consolidateSimilarIcons(icons: IconInfo[], scope: string = 'all-p
       return;
     }
 
-    // Group similar icons by normalized name and size
+    // First, validate all icons exist and are accessible
+    const validIcons: IconInfo[] = [];
+    for (const icon of iconsToProcess) {
+      try {
+        const node = await figma.getNodeByIdAsync(icon.id);
+        if (node && node.type !== 'PAGE') {
+          validIcons.push(icon);
+        } else {
+          console.log(`⚠️ Skipping invalid/deleted icon: ${icon.name} (${icon.id})`);
+        }
+      } catch (error) {
+        console.log(`⚠️ Skipping inaccessible icon: ${icon.name} (${icon.id})`);
+      }
+    }
+
+    if (validIcons.length === 0) {
+      figma.ui.postMessage({
+        type: 'consolidation-complete',
+        data: { 
+          componentsCreated: 0,
+          iconsReplaced: 0,
+          pagesAffected: 0,
+          message: 'No valid unresolved icons found to consolidate.'
+        }
+      });
+      return;
+    }
+
+    figma.ui.postMessage({
+      type: 'consolidation-progress',
+      data: { percentage: 10, message: `Validated ${validIcons.length} icons. Starting auto-create...` }
+    });
+
+    // Group similar icons by normalized name and size, then enhance with visual similarity
     const iconGroups = new Map<string, IconInfo[]>();
+    const singleIcons: IconInfo[] = [];
     
-    iconsToProcess.forEach(icon => {
-      const normalizedName = icon.name.toLowerCase()
-        .replace(/[-_\s\.]/g, '')
-        .replace(/\d+/g, '')
-        .replace(/(icon|svg|vector|graphic|outline|filled|solid)/g, '')
-        .replace(/[^a-z]/g, '');
+    // First pass: group by basic similarity (name + size)
+    validIcons.forEach(icon => {
+      let normalizedName: string;
+      
+      // Handle library-style names (e.g., "lucide/ellipse") differently
+      const libraryPattern = /^([a-zA-Z0-9-_]+)\/(.+)$/;
+      const libraryMatch = icon.name.match(libraryPattern);
+      
+      if (libraryMatch) {
+        // For library-style names, preserve the library part and normalize the icon part
+        const [, libraryName, iconName] = libraryMatch;
+        const normalizedIconName = iconName.toLowerCase()
+          .replace(/[-_\s\.]/g, '')
+          .replace(/\d+/g, '')
+          .replace(/(icon|svg|vector|graphic|outline|filled|solid)/g, '')
+          .replace(/[^a-z]/g, '');
+        normalizedName = `${libraryName.toLowerCase()}/${normalizedIconName}`;
+      } else {
+        // For non-library names, use the existing normalization
+        normalizedName = icon.name.toLowerCase()
+          .replace(/[-_\s\.]/g, '')
+          .replace(/\d+/g, '')
+          .replace(/(icon|svg|vector|graphic|outline|filled|solid)/g, '')
+          .replace(/[^a-z]/g, '');
+      }
       
       const sizeGroup = `${Math.round(icon.width/8)*8}x${Math.round(icon.height/8)*8}`;
       const groupKey = `${normalizedName}_${sizeGroup}_${icon.source}`;
@@ -885,26 +938,71 @@ async function consolidateSimilarIcons(icons: IconInfo[], scope: string = 'all-p
       iconGroups.get(groupKey)!.push(icon);
     });
 
+    // Second pass: enhance grouping with visual similarity detection
+    figma.ui.postMessage({
+      type: 'consolidation-progress',
+      data: { percentage: 20, message: 'Analyzing visual similarity...' }
+    });
+
+    const enhancedGroups = new Map<string, IconInfo[]>();
+    const processedIcons = new Set<string>();
+
+    for (const [groupKey, initialGroup] of iconGroups.entries()) {
+      if (initialGroup.length === 1) {
+        // Single icons - check if they're visually similar to any existing group
+        const singleIcon = initialGroup[0];
+        if (processedIcons.has(singleIcon.id)) continue;
+
+        let bestMatch: { groupKey: string, similarity: number } | null = null;
+        
+        // Check against all existing enhanced groups
+        for (const [existingGroupKey, existingGroup] of enhancedGroups.entries()) {
+          if (existingGroup.length === 0) continue;
+          
+          // Calculate similarity to the first icon in the group (representative)
+          const representative = existingGroup[0];
+          try {
+            const similarity = await calculateIconSimilarity(singleIcon, representative);
+            if (similarity > 70 && (!bestMatch || similarity > bestMatch.similarity)) {
+              bestMatch = { groupKey: existingGroupKey, similarity };
+            }
+          } catch (error) {
+            // Skip if similarity calculation fails
+          }
+        }
+
+        if (bestMatch) {
+          // Add to existing group
+          enhancedGroups.get(bestMatch.groupKey)!.push(singleIcon);
+          processedIcons.add(singleIcon.id);
+        } else {
+          // Create new group
+          const newKey = `enhanced_${groupKey}_${singleIcon.id}`;
+          enhancedGroups.set(newKey, [singleIcon]);
+          processedIcons.add(singleIcon.id);
+        }
+      } else {
+        // Multiple icons - keep the group and mark as processed
+        enhancedGroups.set(groupKey, initialGroup);
+        initialGroup.forEach(icon => processedIcons.add(icon.id));
+      }
+    }
+
+    // Separate enhanced groups into multi-icon groups and single icons
+    const groupedIcons: IconInfo[] = [];
+    const enhancedSingleIcons: IconInfo[] = [];
+    
+    for (const [groupKey, group] of enhancedGroups.entries()) {
+      if (group.length > 1) {
+        groupedIcons.push(...group);
+      } else {
+        enhancedSingleIcons.push(...group);
+      }
+    }
+
     let componentsCreated = 0;
     let iconsReplaced = 0;
     const pagesAffected = new Set<string>();
-    let processed = 0;
-
-    // Only process groups with multiple similar icons
-    const groupsToProcess = Array.from(iconGroups.entries()).filter(([, group]) => group.length > 1);
-    
-    if (groupsToProcess.length === 0) {
-      figma.ui.postMessage({
-        type: 'consolidation-complete',
-        data: { 
-          componentsCreated: 0,
-          iconsReplaced: 0,
-          pagesAffected: 0,
-          message: 'No similar icons found to consolidate.'
-        }
-      });
-      return;
-    }
 
     // First, check if Icon Library page exists, if not create it
     let iconLibraryPage = figma.root.children.find(page => page.name === '🎯 Icon Library') as PageNode;
@@ -913,119 +1011,54 @@ async function consolidateSimilarIcons(icons: IconInfo[], scope: string = 'all-p
       iconLibraryPage.name = '🎯 Icon Library';
     }
 
-    for (const [groupKey, group] of groupsToProcess) {
+    // Process grouped icons (similar icons)
+    const enhancedGroupsToProcess = Array.from(enhancedGroups.entries()).filter(([, group]) => group.length > 1);
+    
+    for (let i = 0; i < enhancedGroupsToProcess.length; i++) {
+      const [groupKey, group] = enhancedGroupsToProcess[i];
+      
       try {
         figma.ui.postMessage({
           type: 'consolidation-progress',
           data: { 
-            percentage: (processed / groupsToProcess.length) * 90,
-            message: `Processing group ${processed + 1}/${groupsToProcess.length}...`
+            percentage: 30 + (i / (enhancedGroupsToProcess.length + enhancedSingleIcons.length)) * 50,
+            message: `Processing similar icons group ${i + 1}/${enhancedGroupsToProcess.length} (${group.length} icons)...`
           }
         });
 
-        // Find the best representative icon (prefer ones with better names)
-        const bestIcon = group.reduce((best, current) => {
-          const currentScore = current.name.length + (current.name.includes('icon') ? 10 : 0);
-          const bestScore = best.name.length + (best.name.includes('icon') ? 10 : 0);
-          return currentScore > bestScore ? current : best;
-        });
-
-        // Get the original node
-        const originalNode = await figma.getNodeByIdAsync(bestIcon.id);
-        if (!originalNode || originalNode.type === 'PAGE') {
-          continue;
+        const result = await createComponentFromIconGroup(group, iconLibraryPage, componentsCreated);
+        if (result.success) {
+          componentsCreated++;
+          iconsReplaced += result.iconsReplaced;
+          result.pagesAffected.forEach(page => pagesAffected.add(page));
         }
-
-        // Clone the node content
-        const clonedNode = (originalNode as any).clone();
-        
-        // Convert to component if it isn't already
-        let component: ComponentNode;
-        if (clonedNode.type === 'COMPONENT') {
-          component = clonedNode;
-          iconLibraryPage.appendChild(component);
-        } else {
-          // Create component from the cloned node
-          component = figma.createComponent();
-          component.name = await generateSmartIconName(clonedNode as IconNode);
-          component.resize(clonedNode.width, clonedNode.height);
-          
-          // Reset clone position to (0,0) relative to component
-          if ('x' in clonedNode && 'y' in clonedNode) {
-            clonedNode.x = 0;
-            clonedNode.y = 0;
-          }
-          
-          // Add the cloned content to the component
-          component.appendChild(clonedNode);
-          
-          // Add the completed component to the icon library page
-          iconLibraryPage.appendChild(component);
-          
-          // DON'T remove clonedNode - it's now the content of the component!
-        }
-        
-        // Position the component in a grid on the icon library page
-        const gridSize = 80; // Space between icons
-        const iconsPerRow = 10;
-        const row = Math.floor(componentsCreated / iconsPerRow);
-        const col = componentsCreated % iconsPerRow;
-        
-        component.x = col * gridSize;
-        component.y = row * gridSize;
-        
-        componentsCreated++;
-
-        // Replace all icons in the group with instances of the new component
-        // IMPORTANT: Don't try to replace the icon we used to create the component
-        for (const iconToReplace of group) {
-          // Skip the icon that was used as the source for creating the component
-          if (iconToReplace.id === bestIcon.id) {
-            console.log(`Skipping replacement of source icon: ${iconToReplace.name} (used to create component)`);
-            
-            // Instead, just remove the original source icon since we cloned it to create the component
-            try {
-              const sourceNode = await figma.getNodeByIdAsync(iconToReplace.id);
-              if (sourceNode && sourceNode.type !== 'PAGE' && sourceNode.type !== 'COMPONENT') {
-                console.log(`Removing original source node: ${iconToReplace.name}`);
-                sourceNode.remove();
-                iconsReplaced++;
-                pagesAffected.add(iconToReplace.page);
-              }
-            } catch (sourceRemoveError) {
-              console.error(`Failed to remove source node ${iconToReplace.name}:`, sourceRemoveError);
-            }
-            continue;
-          }
-          
-          try {
-            await replaceWithInstance(iconToReplace, component);
-            iconsReplaced++;
-            pagesAffected.add(iconToReplace.page);
-            console.log(`Successfully replaced ${iconToReplace.name} with instance`);
-          } catch (replaceError) {
-            console.error(`Failed to replace ${iconToReplace.name}:`, replaceError);
-            
-            // If replaceWithInstance fails, manually try to remove the original node to prevent empty frames
-            try {
-              const failedNode = await figma.getNodeByIdAsync(iconToReplace.id);
-              if (failedNode && failedNode.type !== 'PAGE') {
-                console.log(`Manually removing failed node: ${iconToReplace.name}`);
-                failedNode.remove();
-                iconsReplaced++; // Count manual removals too
-                pagesAffected.add(iconToReplace.page);
-              }
-            } catch (manualRemoveError) {
-              console.error(`Failed to manually remove ${iconToReplace.name}:`, manualRemoveError);
-            }
-          }
-        }
-
       } catch (groupError) {
-        // Continue with next group if this one fails
+        console.error(`Failed to process enhanced group ${groupKey}:`, groupError);
       }
+    }
+
+    // Process single icons (convert each to its own component)
+    for (let i = 0; i < enhancedSingleIcons.length; i++) {
+      const icon = enhancedSingleIcons[i];
       
-      processed++;
+      try {
+        figma.ui.postMessage({
+          type: 'consolidation-progress',
+          data: { 
+            percentage: 30 + ((enhancedGroupsToProcess.length + i) / (enhancedGroupsToProcess.length + enhancedSingleIcons.length)) * 50,
+            message: `Converting single icon ${i + 1}/${enhancedSingleIcons.length}: ${icon.name}...`
+          }
+        });
+
+        const result = await createComponentFromSingleIcon(icon, iconLibraryPage, componentsCreated);
+        if (result.success) {
+          componentsCreated++;
+          iconsReplaced += result.iconsReplaced;
+          result.pagesAffected.forEach(page => pagesAffected.add(page));
+        }
+      } catch (singleError) {
+        console.error(`Failed to convert single icon ${icon.name}:`, singleError);
+      }
     }
 
     figma.ui.postMessage({
@@ -1034,7 +1067,7 @@ async function consolidateSimilarIcons(icons: IconInfo[], scope: string = 'all-p
         componentsCreated,
         iconsReplaced,
         pagesAffected: pagesAffected.size,
-        message: `Consolidation complete! Created ${componentsCreated} new components and replaced ${iconsReplaced} icons.`
+        message: `Auto-create complete! Created ${componentsCreated} new components and replaced ${iconsReplaced} icons.`
       }
     });
 
@@ -1046,12 +1079,187 @@ async function consolidateSimilarIcons(icons: IconInfo[], scope: string = 'all-p
   }
 }
 
-async function replaceWithInstance(icon: IconInfo, component: ComponentNode): Promise<void> {
+// Helper function to create component from a group of similar icons
+async function createComponentFromIconGroup(group: IconInfo[], iconLibraryPage: PageNode, gridPosition: number): Promise<{success: boolean, iconsReplaced: number, pagesAffected: Set<string>}> {
+  const result = { success: false, iconsReplaced: 0, pagesAffected: new Set<string>() };
+  
+  try {
+    // Find the best representative icon (prefer ones with better names)
+    const bestIcon = group.reduce((best, current) => {
+      const currentScore = current.name.length + (current.name.includes('icon') ? 10 : 0);
+      const bestScore = best.name.length + (best.name.includes('icon') ? 10 : 0);
+      return currentScore > bestScore ? current : best;
+    });
+
+    // Get the original node
+    const originalNode = await figma.getNodeByIdAsync(bestIcon.id);
+    if (!originalNode || originalNode.type === 'PAGE') {
+      return result;
+    }
+
+    // Clone the node content
+    const clonedNode = (originalNode as any).clone();
+    
+    // Convert to component
+    let component: ComponentNode;
+    if (clonedNode.type === 'COMPONENT') {
+      component = clonedNode;
+      iconLibraryPage.appendChild(component);
+    } else {
+      component = figma.createComponent();
+      component.name = await generateSmartIconName(clonedNode as IconNode);
+      component.resize(clonedNode.width, clonedNode.height);
+      
+      if ('x' in clonedNode && 'y' in clonedNode) {
+        clonedNode.x = 0;
+        clonedNode.y = 0;
+      }
+      
+      component.appendChild(clonedNode);
+      iconLibraryPage.appendChild(component);
+    }
+    
+    // Position the component in a grid
+    const gridSize = 80;
+    const iconsPerRow = 10;
+    const row = Math.floor(gridPosition / iconsPerRow);
+    const col = gridPosition % iconsPerRow;
+    
+    component.x = col * gridSize;
+    component.y = row * gridSize;
+
+    // Replace all icons in the group with instances
+    for (const iconToReplace of group) {
+      if (iconToReplace.id === bestIcon.id) {
+        // Remove the original source icon
+        try {
+          const sourceNode = await figma.getNodeByIdAsync(iconToReplace.id);
+          if (sourceNode && sourceNode.type !== 'PAGE' && sourceNode.type !== 'COMPONENT') {
+            sourceNode.remove();
+            result.iconsReplaced++;
+            result.pagesAffected.add(iconToReplace.page);
+          }
+        } catch (sourceRemoveError) {
+          console.error(`Failed to remove source node ${iconToReplace.name}:`, sourceRemoveError);
+        }
+        continue;
+      }
+      
+      try {
+        await replaceWithInstance(iconToReplace, component);
+        result.iconsReplaced++;
+        result.pagesAffected.add(iconToReplace.page);
+      } catch (replaceError) {
+        console.error(`Failed to replace ${iconToReplace.name}:`, replaceError);
+        
+        // Try to remove the original node to prevent empty frames
+        try {
+          const failedNode = await figma.getNodeByIdAsync(iconToReplace.id);
+          if (failedNode && failedNode.type !== 'PAGE') {
+            failedNode.remove();
+            result.iconsReplaced++;
+            result.pagesAffected.add(iconToReplace.page);
+          }
+        } catch (manualRemoveError) {
+          console.error(`Failed to manually remove ${iconToReplace.name}:`, manualRemoveError);
+        }
+      }
+    }
+
+    result.success = true;
+    return result;
+  } catch (error) {
+    console.error('Error creating component from group:', error);
+    return result;
+  }
+}
+
+// Helper function to create component from a single icon
+async function createComponentFromSingleIcon(icon: IconInfo, iconLibraryPage: PageNode, gridPosition: number): Promise<{success: boolean, iconsReplaced: number, pagesAffected: Set<string>}> {
+  const result = { success: false, iconsReplaced: 0, pagesAffected: new Set<string>() };
+  
   try {
     // Get the original node
     const originalNode = await figma.getNodeByIdAsync(icon.id);
     if (!originalNode || originalNode.type === 'PAGE') {
+      return result;
+    }
+
+    // Clone the node content
+    const clonedNode = (originalNode as any).clone();
+    
+    // Convert to component
+    let component: ComponentNode;
+    if (clonedNode.type === 'COMPONENT') {
+      component = clonedNode;
+      iconLibraryPage.appendChild(component);
+    } else {
+      component = figma.createComponent();
+      component.name = await generateSmartIconName(clonedNode as IconNode);
+      component.resize(clonedNode.width, clonedNode.height);
+      
+      if ('x' in clonedNode && 'y' in clonedNode) {
+        clonedNode.x = 0;
+        clonedNode.y = 0;
+      }
+      
+      component.appendChild(clonedNode);
+      iconLibraryPage.appendChild(component);
+    }
+    
+    // Position the component in a grid
+    const gridSize = 80;
+    const iconsPerRow = 10;
+    const row = Math.floor(gridPosition / iconsPerRow);
+    const col = gridPosition % iconsPerRow;
+    
+    component.x = col * gridSize;
+    component.y = row * gridSize;
+
+    // Replace the original icon with an instance
+    try {
+      await replaceWithInstance(icon, component);
+      result.iconsReplaced++;
+      result.pagesAffected.add(icon.page);
+    } catch (replaceError) {
+      console.error(`Failed to replace ${icon.name}:`, replaceError);
+      
+      // Try to remove the original node
+      try {
+        const failedNode = await figma.getNodeByIdAsync(icon.id);
+        if (failedNode && failedNode.type !== 'PAGE') {
+          failedNode.remove();
+          result.iconsReplaced++;
+          result.pagesAffected.add(icon.page);
+        }
+      } catch (manualRemoveError) {
+        console.error(`Failed to manually remove ${icon.name}:`, manualRemoveError);
+      }
+    }
+
+    result.success = true;
+    return result;
+  } catch (error) {
+    console.error('Error creating component from single icon:', error);
+    return result;
+  }
+}
+
+async function replaceWithInstance(icon: IconInfo, component: ComponentNode): Promise<void> {
+  try {
+    // Get the original node with validation
+    const originalNode = await figma.getNodeByIdAsync(icon.id);
+    if (!originalNode || originalNode.type === 'PAGE') {
       throw new Error(`Original node not found or is a page: ${icon.name}`);
+    }
+
+    // Double-check the node is still accessible
+    try {
+      // Try to access a property to ensure the node is still valid
+      const _ = originalNode.name;
+      const _2 = originalNode.type;
+    } catch (accessError) {
+      throw new Error(`Node ${icon.name} is no longer accessible: ${accessError}`);
     }
 
     // Validate that the node is replaceable
@@ -1075,7 +1283,15 @@ async function replaceWithInstance(icon: IconInfo, component: ComponentNode): Pr
 
     // Validate parent exists and can contain children
     if (!parent || !('appendChild' in parent)) {
-      throw new Error(`Invalid parent for ${icon.name}`);
+      throw new Error(`Invalid parent for ${icon.name}: parent is ${parent ? 'not appendable' : 'null'}`);
+    }
+
+    // Validate component is still accessible
+    try {
+      const _ = component.name;
+      const _2 = component.type;
+    } catch (componentError) {
+      throw new Error(`Component ${component.name} is no longer accessible: ${componentError}`);
     }
 
     // Create instance
@@ -1097,10 +1313,11 @@ async function replaceWithInstance(icon: IconInfo, component: ComponentNode): Pr
 
     // Remove the original node - this is critical to prevent empty frames
     originalNode.remove();
-    console.log(`Successfully removed original node: ${icon.name}`);
+    console.log(`Successfully replaced ${icon.name} with instance of ${component.name}`);
 
   } catch (error) {
-    throw new Error(`Failed to replace icon ${icon.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error(`Failed to replace ${icon.name}:`, error);
+    throw error; // Re-throw to let calling function handle it
   }
 }
 
@@ -1129,11 +1346,30 @@ async function consolidateLibraryDuplicates(icons: IconInfo[], currentPageName: 
     const duplicateGroups = new Map<string, IconInfo[]>();
     
     libraryIcons.forEach(icon => {
-      const basePattern = icon.name.toLowerCase()
-        .replace(/[-_\s\.]/g, '')
-        .replace(/\d+/g, '')
-        .replace(/\s*copy\s*\d*/i, '')
-        .trim();
+      let basePattern: string;
+      
+      // Handle library-style names (e.g., "lucide/ellipse") differently
+      const libraryPattern = /^([a-zA-Z0-9-_]+)\/(.+)$/;
+      const libraryMatch = icon.name.match(libraryPattern);
+      
+      if (libraryMatch) {
+        // For library-style names, preserve the library part
+        const [, libraryName, iconName] = libraryMatch;
+        const normalizedIconName = iconName.toLowerCase()
+          .replace(/[-_\s\.]/g, '')
+          .replace(/\d+/g, '')
+          .replace(/\s*copy\s*\d*/i, '')
+          .trim();
+        basePattern = `${libraryName.toLowerCase()}/${normalizedIconName}`;
+      } else {
+        // For non-library names, use the existing normalization
+        basePattern = icon.name.toLowerCase()
+          .replace(/[-_\s\.]/g, '')
+          .replace(/\d+/g, '')
+          .replace(/\s*copy\s*\d*/i, '')
+          .trim();
+      }
+      
       const sizeKey = `${Math.round(icon.width/4)*4}x${Math.round(icon.height/4)*4}`; // 4px tolerance
       const groupKey = `${basePattern}_${sizeKey}`;
       
@@ -1487,6 +1723,19 @@ async function scanForIcons(): Promise<ScanResult> {
             continue;
           }
           
+          // Additional validation - ensure component is still accessible
+          try {
+            const testAccess = component.name; // Test that we can access properties
+            const testType = component.type;
+            if (!testAccess || !testType) {
+              console.log(`  - ❌ Component not accessible: ${component.name}`);
+              continue;
+            }
+          } catch (accessError) {
+            console.log(`  - ❌ Component access error: ${component.name} - ${accessError}`);
+            continue;
+          }
+          
           try {
             const preview = await generateIconPreview(component);
             const frameContext = determineFrameContext(component);
@@ -1525,6 +1774,16 @@ async function scanForIcons(): Promise<ScanResult> {
               
               for (const variant of component.children) {
                 if (variant.type === 'COMPONENT') {
+                  // Additional validation for variants
+                  try {
+                    const testAccess = variant.name;
+                    const testType = variant.type;
+                    if (!testAccess || !testType) continue;
+                  } catch (variantAccessError) {
+                    console.log(`  - ❌ Variant access error: ${variant.name} - ${variantAccessError}`);
+                    continue;
+                  }
+                  
                   const variantBounds = variant.absoluteBoundingBox;
                   if (!variantBounds) continue;
                   
@@ -1621,10 +1880,36 @@ async function scanForIcons(): Promise<ScanResult> {
       
       for (const instance of allInstances) {
         try {
+          // Additional validation - ensure instance is still accessible
+          try {
+            const testAccess = instance.name;
+            const testType = instance.type;
+            if (!testAccess || !testType) {
+              console.log(`  - ❌ Instance not accessible: ${instance.name}`);
+              continue;
+            }
+          } catch (accessError) {
+            console.log(`  - ❌ Instance access error: ${instance.name} - ${accessError}`);
+            continue;
+          }
+          
           const mainComponent = await instance.getMainComponentAsync();
           
           // Check if this instance references one of our discovered master components
           if (mainComponent && masterComponentIds.has(mainComponent.id)) {
+            // Additional validation for main component
+            try {
+              const testMainAccess = mainComponent.name;
+              const testMainType = mainComponent.type;
+              if (!testMainAccess || !testMainType) {
+                console.log(`  - ❌ Main component not accessible: ${mainComponent.name}`);
+                continue;
+              }
+            } catch (mainAccessError) {
+              console.log(`  - ❌ Main component access error: ${mainComponent.name} - ${mainAccessError}`);
+              continue;
+            }
+            
             const bounds = instance.absoluteBoundingBox;
             if (bounds) {
               const preview = await generateIconPreview(instance);
@@ -1655,6 +1940,7 @@ async function scanForIcons(): Promise<ScanResult> {
           }
         } catch (instanceError) {
           // Skip instances that can't be processed
+          console.log(`  - ❌ Instance processing error: ${instanceError}`);
         }
       }
       
@@ -1740,6 +2026,19 @@ async function scanForIcons(): Promise<ScanResult> {
       
       // Check each potential icon using our existing detection logic
       for (const node of finalUnresolvedIcons) {
+        // Additional validation - ensure node is still accessible
+        try {
+          const testAccess = node.name;
+          const testType = node.type;
+          if (!testAccess || !testType) {
+            console.log(`  - ❌ Unresolved node not accessible: ${node.name || 'unnamed'}`);
+            continue;
+          }
+        } catch (accessError) {
+          console.log(`  - ❌ Unresolved node access error: ${node.name || 'unnamed'} - ${accessError}`);
+          continue;
+        }
+        
         if (isLikelyIcon(node)) {
           const bounds = node.absoluteBoundingBox;
           if (!bounds) continue;
@@ -2022,6 +2321,26 @@ async function generateSmartIconName(node: IconNode): Promise<string> {
     // Start with the original name
     let smartName = node.name;
     
+    // Check if this is a library-style name (e.g., "lucide/ellipse", "heroicons/arrow-right")
+    const libraryPattern = /^([a-zA-Z0-9-_]+)\/(.+)$/;
+    const libraryMatch = smartName.match(libraryPattern);
+    
+    if (libraryMatch) {
+      // Preserve library-style naming but clean up the icon name part
+      const libraryName = libraryMatch[1];
+      let iconName = libraryMatch[2];
+      
+      // Clean up the icon name part
+      iconName = iconName
+        .replace(/[-_]+/g, '-') // Normalize separators to hyphens
+        .replace(/\s+/g, '-') // Replace spaces with hyphens
+        .trim();
+      
+      // Return the cleaned library-style name
+      return `${libraryName}/${iconName}`;
+    }
+    
+    // For non-library names, apply the existing logic
     // Remove common prefixes/suffixes that don't add value
     smartName = smartName
       .replace(/^(icon|ico|symbol|glyph)[-_\s]*/i, '')
@@ -2067,8 +2386,8 @@ async function generateSmartIconName(node: IconNode): Promise<string> {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ');
     
-    // Ensure it starts with a letter and contains only valid characters
-    smartName = smartName.replace(/^[^a-zA-Z]+/, '').replace(/[^a-zA-Z0-9\s\-_]/g, '');
+    // Ensure it starts with a letter and contains only valid characters (but preserve forward slashes for library names)
+    smartName = smartName.replace(/^[^a-zA-Z]+/, '').replace(/[^a-zA-Z0-9\s\-_\/]/g, '');
     
     // Fallback if name is still empty or invalid
     if (!smartName || smartName.length < 2) {
@@ -2424,10 +2743,36 @@ async function convertSingleIconToComponent(icon: IconInfo): Promise<void> {
   try {
     console.log('Converting single icon to component:', icon.name);
     
-    // Get the original node
+    // Get the original node with enhanced validation
     const originalNode = await figma.getNodeByIdAsync(icon.id);
     if (!originalNode || originalNode.type === 'PAGE') {
-      throw new Error('Original icon not found or is invalid');
+      throw new Error(`Original icon "${icon.name}" not found or is invalid - it may have been deleted or moved`);
+    }
+    
+    // Additional validation to ensure the node is still accessible
+    try {
+      const testAccess = originalNode.name;
+      const testType = originalNode.type;
+      const testBounds = 'absoluteBoundingBox' in originalNode ? originalNode.absoluteBoundingBox : null;
+      
+      if (!testAccess || !testType) {
+        throw new Error('Icon is no longer accessible - it may have been corrupted');
+      }
+      
+      if (!testBounds) {
+        throw new Error('Icon has no dimensions - it may be invisible or corrupted');
+      }
+    } catch (accessError) {
+      throw new Error(`Icon "${icon.name}" is no longer accessible: ${accessError instanceof Error ? accessError.message : 'Unknown access error'}`);
+    }
+    
+    // Validate the node is appropriate for conversion
+    if (originalNode.type === 'COMPONENT') {
+      throw new Error(`"${icon.name}" is already a master component`);
+    }
+    
+    if (originalNode.type === 'COMPONENT_SET') {
+      throw new Error(`"${icon.name}" is already a component set`);
     }
     
     // Find or create the Icon Library page
@@ -2438,7 +2783,12 @@ async function convertSingleIconToComponent(icon: IconInfo): Promise<void> {
     }
     
     // Clone the node to the icon library page
-    const clonedNode = (originalNode as any).clone();
+    let clonedNode: any;
+    try {
+      clonedNode = (originalNode as any).clone();
+    } catch (cloneError) {
+      throw new Error(`Failed to clone icon "${icon.name}": ${cloneError instanceof Error ? cloneError.message : 'Unknown clone error'}`);
+    }
     
     // Convert to component if it isn't already
     let component: ComponentNode;
@@ -2452,8 +2802,10 @@ async function convertSingleIconToComponent(icon: IconInfo): Promise<void> {
       component.resize(clonedNode.width, clonedNode.height);
       
       // Position the cloned content at (0,0) relative to the component
-      clonedNode.x = 0;
-      clonedNode.y = 0;
+      if ('x' in clonedNode && 'y' in clonedNode) {
+        clonedNode.x = 0;
+        clonedNode.y = 0;
+      }
       component.appendChild(clonedNode);
       
       iconLibraryPage.appendChild(component);
@@ -2712,6 +3064,175 @@ async function addSvgIconToLibrary(svgContent: string, fileName: string, width: 
   }
 }
 
+// Enhanced icon similarity detection using visual properties
+async function calculateIconSimilarity(icon1: IconInfo, icon2: IconInfo): Promise<number> {
+  // Base similarity score
+  let similarity = 0;
+  
+  // Size similarity (0-30 points)
+  const sizeScore = Math.max(0, 30 - Math.abs(icon1.width - icon2.width) - Math.abs(icon1.height - icon2.height));
+  similarity += sizeScore;
+  
+  // Aspect ratio similarity (0-20 points)
+  const ratio1 = icon1.width / icon1.height;
+  const ratio2 = icon2.width / icon2.height;
+  const ratioScore = Math.max(0, 20 - Math.abs(ratio1 - ratio2) * 100);
+  similarity += ratioScore;
+  
+  // Name similarity (0-30 points)
+  const nameScore = calculateNameSimilarity(icon1.name, icon2.name);
+  similarity += nameScore;
+  
+  // Source similarity (0-20 points)
+  const sourceScore = icon1.source === icon2.source ? 20 : 0;
+  similarity += sourceScore;
+  
+  // Try to get visual similarity by comparing fills and strokes
+  try {
+    const node1 = await figma.getNodeByIdAsync(icon1.id);
+    const node2 = await figma.getNodeByIdAsync(icon2.id);
+    
+    if (node1 && node2) {
+      const visualScore = calculateVisualSimilarity(node1, node2);
+      similarity += visualScore; // 0-30 points
+    }
+  } catch (error) {
+    // If we can't access the nodes, skip visual comparison
+  }
+  
+  return Math.min(100, similarity);
+}
+
+// Calculate name similarity using Levenshtein distance
+function calculateNameSimilarity(name1: string, name2: string): number {
+  // First, check if both names are library-style (e.g., "lucide/ellipse")
+  const libraryPattern = /^([a-zA-Z0-9-_]+)\/(.+)$/;
+  const match1 = name1.match(libraryPattern);
+  const match2 = name2.match(libraryPattern);
+  
+  if (match1 && match2) {
+    // Both are library-style names
+    const [, lib1, icon1] = match1;
+    const [, lib2, icon2] = match2;
+    
+    // If same library, compare icon names
+    if (lib1.toLowerCase() === lib2.toLowerCase()) {
+      const norm1 = icon1.toLowerCase().replace(/[-_\s\.]/g, '').replace(/\d+/g, '');
+      const norm2 = icon2.toLowerCase().replace(/[-_\s\.]/g, '').replace(/\d+/g, '');
+      
+      if (norm1 === norm2) return 30;
+      if (norm1.length === 0 || norm2.length === 0) return 0;
+      
+      const distance = levenshteinDistance(norm1, norm2);
+      const maxLen = Math.max(norm1.length, norm2.length);
+      const similarity = 1 - (distance / maxLen);
+      
+      return Math.floor(similarity * 30);
+    } else {
+      // Different libraries, lower similarity
+      return 5; // Small bonus for both being library-style
+    }
+  }
+  
+  // Fallback to standard normalization for non-library names
+  const normalize = (str: string) => str.toLowerCase()
+    .replace(/[-_\s\.]/g, '')
+    .replace(/\d+/g, '')
+    .replace(/(icon|svg|vector|graphic|outline|filled|solid)/g, '')
+    .replace(/[^a-z]/g, '');
+  
+  const norm1 = normalize(name1);
+  const norm2 = normalize(name2);
+  
+  if (norm1 === norm2) return 30;
+  if (norm1.length === 0 || norm2.length === 0) return 0;
+  
+  // Calculate Levenshtein distance
+  const distance = levenshteinDistance(norm1, norm2);
+  const maxLen = Math.max(norm1.length, norm2.length);
+  const similarity = 1 - (distance / maxLen);
+  
+  return Math.floor(similarity * 30);
+}
+
+// Levenshtein distance algorithm
+function levenshteinDistance(str1: string, str2: string): number {
+  const matrix = [];
+  
+  for (let i = 0; i <= str2.length; i++) {
+    matrix[i] = [i];
+  }
+  
+  for (let j = 0; j <= str1.length; j++) {
+    matrix[0][j] = j;
+  }
+  
+  for (let i = 1; i <= str2.length; i++) {
+    for (let j = 1; j <= str1.length; j++) {
+      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+  
+  return matrix[str2.length][str1.length];
+}
+
+// Calculate visual similarity based on node properties
+function calculateVisualSimilarity(node1: BaseNode, node2: BaseNode): number {
+  let visualScore = 0;
+  
+  // Type similarity
+  if (node1.type === node2.type) {
+    visualScore += 10;
+  }
+  
+  // For nodes with fills/strokes, compare them
+  if ('fills' in node1 && 'fills' in node2) {
+    const fills1 = Array.isArray(node1.fills) ? node1.fills : [];
+    const fills2 = Array.isArray(node2.fills) ? node2.fills : [];
+    
+    if (fills1.length === fills2.length) {
+      visualScore += 5;
+      
+      // Compare fill types
+      if (fills1.length > 0 && fills2.length > 0) {
+        const type1 = fills1[0].type;
+        const type2 = fills2[0].type;
+        if (type1 === type2) {
+          visualScore += 5;
+        }
+      }
+    }
+  }
+  
+  if ('strokes' in node1 && 'strokes' in node2) {
+    const strokes1 = Array.isArray(node1.strokes) ? node1.strokes : [];
+    const strokes2 = Array.isArray(node2.strokes) ? node2.strokes : [];
+    
+    if (strokes1.length === strokes2.length) {
+      visualScore += 5;
+      
+      // Compare stroke types
+      if (strokes1.length > 0 && strokes2.length > 0) {
+        const type1 = strokes1[0].type;
+        const type2 = strokes2[0].type;
+        if (type1 === type2) {
+          visualScore += 5;
+        }
+      }
+    }
+  }
+  
+  return Math.min(20, visualScore);
+}
+
 // Handle messages from UI
 figma.ui.onmessage = async (msg) => {
   switch (msg.type) {
@@ -2951,10 +3472,44 @@ figma.ui.onmessage = async (msg) => {
       
     case 'convert-single-icon':
       try {
-        // Find the icon in the current scene
+        console.log('Converting single icon:', msg.iconId, msg.iconName);
+        
+        // Find the icon in the current scene with enhanced validation
         const iconNode = await figma.getNodeByIdAsync(msg.iconId);
         if (!iconNode) {
-          throw new Error('Icon not found');
+          throw new Error('Icon not found - it may have been deleted or moved to another page');
+        }
+        
+        // Additional validation to ensure the node is still accessible
+        try {
+          const testAccess = iconNode.name;
+          const testType = iconNode.type;
+          const testBounds = 'absoluteBoundingBox' in iconNode ? iconNode.absoluteBoundingBox : null;
+          
+          if (!testAccess || !testType) {
+            throw new Error('Icon is no longer accessible - it may have been corrupted');
+          }
+        } catch (accessError) {
+          throw new Error(`Icon is no longer accessible: ${accessError instanceof Error ? accessError.message : 'Unknown access error'}`);
+        }
+        
+        // Validate the node is appropriate for conversion
+        if (iconNode.type === 'PAGE') {
+          throw new Error('Cannot convert a page to an icon component');
+        }
+        
+        if (iconNode.type === 'COMPONENT') {
+          throw new Error('This icon is already a master component');
+        }
+        
+        if (iconNode.type === 'COMPONENT_SET') {
+          throw new Error('This icon is already a component set');
+        }
+        
+        // Get the absolute bounding box for size calculation
+        const bounds = 'absoluteBoundingBox' in iconNode ? iconNode.absoluteBoundingBox : null;
+        if (!bounds) {
+          throw new Error('Icon has no dimensions - it may be invisible or corrupted');
         }
         
         // Create a minimal IconInfo object for the conversion
@@ -2962,8 +3517,8 @@ figma.ui.onmessage = async (msg) => {
           id: msg.iconId,
           name: msg.iconName || iconNode.name || 'Unnamed Icon',
           type: iconNode.type,
-          width: 'width' in iconNode ? iconNode.width : 24,
-          height: 'height' in iconNode ? iconNode.height : 24,
+          width: Math.floor(bounds.width),
+          height: Math.floor(bounds.height),
           page: figma.currentPage.name,
           source: parseIconSource(iconNode.name || 'Unnamed Icon'),
           status: 'unresolved',
@@ -2971,11 +3526,22 @@ figma.ui.onmessage = async (msg) => {
           inconsistencyReasons: []
         };
         
+        console.log('Created IconInfo for conversion:', iconInfo);
+        
         await convertSingleIconToComponent(iconInfo);
+        
       } catch (error) {
+        console.error('Single icon convert error:', error);
+        
+        // Send more specific error message to UI
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
         figma.ui.postMessage({
           type: 'single-icon-convert-error',
-          data: { error: error instanceof Error ? error.message : 'Unknown error occurred' }
+          data: { 
+            error: errorMessage,
+            iconId: msg.iconId,
+            iconName: msg.iconName
+          }
         });
       }
       break;

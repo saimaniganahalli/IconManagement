@@ -3449,7 +3449,22 @@
         function handleContextMenuConvert() {
             if (!contextMenuIcon) return;
             
+            // Validate that the icon is still valid for conversion
+            if (contextMenuIcon.status === 'master' || contextMenuIcon.status === 'instance') {
+                showToast(
+                    'Icon Already Converted',
+                    'This icon is already a master component or instance and doesn\'t need to be converted.',
+                    'info',
+                    5000
+                );
+                hideContextMenu();
+                return;
+            }
+            
             hideContextMenu();
+            
+            // Show loading state
+            showToast('Converting Icon...', `Converting "${contextMenuIcon.name}" to component`, 'info', 3000);
             
             // Convert single icon to component
             parent.postMessage({
@@ -3459,8 +3474,6 @@
                     iconName: contextMenuIcon.name
                 }
             }, '*');
-            
-            showToast('Converting Icon...', `Converting "${contextMenuIcon.name}" to component`, 'info', 3000);
         }
 
         function handleContextMenuReplace() {
@@ -3680,9 +3693,34 @@ ${exportData.branding || 'Artificial Lack of Intelligence © 2025'}
                 return 'Permission denied. You may not have edit access to this file or some elements are locked.';
             }
             
-            // Node not found errors
+            // Enhanced node not found errors
+            if (errorStr.includes('not found') && errorStr.includes('deleted or moved')) {
+                return 'The selected icon could not be found. It may have been deleted or moved to another page. Try refreshing the plugin to get the latest icon data.';
+            }
+            
+            // Node not found errors (general)
             if (errorStr.includes('not found') || errorStr.includes('does not exist') || errorStr.includes('invalid node')) {
                 return 'The selected icon could not be found. It may have been deleted or moved to another page.';
+            }
+            
+            // Node accessibility errors
+            if (errorStr.includes('no longer accessible') || errorStr.includes('corrupted')) {
+                return 'The selected icon is no longer accessible. It may have been corrupted or deleted. Try refreshing the plugin and selecting a different icon.';
+            }
+            
+            // Dimension errors
+            if (errorStr.includes('no dimensions') || errorStr.includes('invisible')) {
+                return 'The selected icon has no dimensions and cannot be converted. It may be invisible or corrupted.';
+            }
+            
+            // Already converted errors
+            if (errorStr.includes('already a master component') || errorStr.includes('already a component set')) {
+                return 'This icon is already a master component and doesn\'t need to be converted.';
+            }
+            
+            // Clone errors
+            if (errorStr.includes('failed to clone')) {
+                return 'Unable to create a copy of the icon. The icon may be locked or corrupted.';
             }
             
             // Component errors
@@ -6499,14 +6537,23 @@ ${exportData.branding || 'Artificial Lack of Intelligence © 2025'}
                     const convertError = data.error || 'Unknown error occurred';
                     const humanConvertError = getHumanErrorMessage(convertError);
                     
+                    // Add helpful suggestions based on error type
+                    let convertErrorMessage = humanConvertError;
+                    const errorStr = convertError.toLowerCase();
+                    
+                    if (errorStr.includes('not found') || errorStr.includes('no longer accessible') || errorStr.includes('corrupted')) {
+                        convertErrorMessage += '\n\nTry clicking the refresh button (🔄) to update the icon list with the latest data.';
+                    }
+                    
                     showToast(
                         'Failed to Convert Icon',
-                        humanConvertError,
+                        convertErrorMessage,
                         'error',
-                        8000
+                        10000 // Show longer for complex errors
                     );
                     
                     console.error('Single icon convert technical error:', convertError);
+                    console.error('Icon ID:', data.iconId, 'Icon Name:', data.iconName);
                     break;
 
                 case 'variant-preview-generated':
