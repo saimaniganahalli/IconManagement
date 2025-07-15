@@ -32,6 +32,9 @@
             background: #ffffff;
             -webkit-font-smoothing: antialiased;
             letter-spacing: -0.25px;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent body scrolling */
         }
 
         .container {
@@ -41,6 +44,7 @@
             flex-direction: column;
             background: #ffffff;
             position: relative;
+            overflow: hidden; /* Prevent container overflow */
         }
 
         /* Plugin Header */
@@ -330,7 +334,8 @@
             flex: 1;
             display: flex;
             overflow: hidden;
-            margin-bottom: 32px; /* Account for footer height */
+            margin-bottom: 0; /* Remove margin to prevent extra scrolling */
+            padding-bottom: 32px; /* Use padding instead to account for footer height */
         }
 
         /* Icon Grid */
@@ -338,6 +343,7 @@
             flex: 1;
             padding: 20px;
             overflow-y: auto;
+            overflow-x: hidden; /* Prevent horizontal scrolling */
             min-height: 0; /* Allow flex child to shrink */
             background: #ffffff;
         }
@@ -749,6 +755,105 @@
         .context-menu-item.disabled {
             color: #999;
             cursor: not-allowed;
+        }
+
+        /* Ignored Icons Section */
+        .ignored-icons-section {
+            border-top: 1px solid #f0f0f0;
+            background: #fafafa;
+            padding: 16px 20px;
+            margin-top: 20px;
+        }
+
+        .ignored-icons-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .ignored-icons-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            margin: 0;
+        }
+
+        .ignored-count {
+            font-size: 12px;
+            color: #999;
+            font-weight: 500;
+        }
+
+        .ignored-icons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 8px;
+        }
+
+        .ignored-icon-slot {
+            background: #f5f5f5;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            opacity: 0.7;
+        }
+
+        .ignored-icon-slot:hover {
+            background: #f0f0f0;
+            border-color: #d5d5d5;
+            opacity: 1;
+        }
+
+        .ignored-icon-slot .icon-preview {
+            width: 32px;
+            height: 32px;
+            margin: 0 auto 4px auto;
+            background: #fff;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e5e5e5;
+        }
+
+        .ignored-icon-slot .icon-name {
+            font-size: 10px;
+            color: #666;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .ignored-icon-slot .restore-button {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ignored-icon-slot:hover .restore-button {
+            opacity: 1;
+        }
+
+        .ignored-icon-slot .restore-button:hover {
+            background: #2563eb;
         }
 
         .context-menu-item.disabled:hover {
@@ -2522,6 +2627,7 @@
             </div>
             <div class="header-actions">
                 <button class="scan-button primary" id="headerScanButton">Scan for Icons</button>
+                <!-- Diagnostic mode removed -->
                 <button class="settings-button" id="settingsButton" title="Settings">
                     <i data-lucide="settings" style="width: 16px; height: 16px;"></i>
                 </button>
@@ -2601,6 +2707,17 @@
                 <!-- List View -->
                 <div class="icon-list" id="iconList">
                     <!-- List items will be populated here -->
+                </div>
+            </div>
+            
+            <!-- Ignored Icons Section -->
+            <div class="ignored-icons-section" id="ignoredIconsSection" style="display: none;">
+                <div class="ignored-icons-header">
+                    <h3>Ignored Icons</h3>
+                    <span class="ignored-count" id="ignoredIconCount">0 ignored</span>
+                </div>
+                <div class="ignored-icons-grid" id="ignoredIconsGrid">
+                    <!-- Ignored icons will be populated here -->
                 </div>
             </div>
 
@@ -3029,22 +3146,9 @@
 
     <!-- Context Menu -->
     <div class="context-menu" id="contextMenu">
-        <div class="context-menu-item" id="contextMenuConvert">
-            <i data-lucide="component" style="width: 14px; height: 14px; margin-right: 8px; vertical-align: text-bottom;"></i>
-            Convert to Component
-        </div>
-        <div class="context-menu-item" id="contextMenuReplace">
-            <i data-lucide="replace" style="width: 14px; height: 14px; margin-right: 8px; vertical-align: text-bottom;"></i>
-            Replace with Instance
-        </div>
-        <div class="context-menu-separator"></div>
-        <div class="context-menu-item" id="contextMenuSwap">
-            <i data-lucide="refresh-cw" style="width: 14px; height: 14px; margin-right: 8px; vertical-align: text-bottom;"></i>
-            Swap Icon
-        </div>
-        <div class="context-menu-item" id="contextMenuSelect">
-            <i data-lucide="mouse-pointer" style="width: 14px; height: 14px; margin-right: 8px; vertical-align: text-bottom;"></i>
-            Select in Canvas
+        <div class="context-menu-item" id="contextMenuIgnore">
+            <i data-lucide="eye-off" style="width: 14px; height: 14px; margin-right: 8px; vertical-align: text-bottom;"></i>
+            Ignore Icon
         </div>
     </div>
 
@@ -3363,47 +3467,17 @@
         }
 
         function customizeContextMenu(icon) {
-            const convertItem = document.getElementById('contextMenuConvert');
-            const replaceItem = document.getElementById('contextMenuReplace');
-            const swapItem = document.getElementById('contextMenuSwap');
-            const selectItem = document.getElementById('contextMenuSelect');
+            const ignoreItem = document.getElementById('contextMenuIgnore');
             
-            // Reset all items
-            [convertItem, replaceItem, swapItem, selectItem].forEach(item => {
-                if (item) {
-                    item.classList.remove('disabled');
-                    item.style.display = 'block';
+            // Only show ignore option for non-ignored icons
+            if (ignoreItem) {
+                if (icon.isIgnored) {
+                    ignoreItem.style.display = 'none';
+                } else {
+                    ignoreItem.classList.remove('disabled');
+                    ignoreItem.style.display = 'block';
                 }
-            });
-            
-            // Customize based on icon status
-            switch (icon.status) {
-                case 'unresolved':
-                    // For unresolved icons: show convert and replace options
-                    if (convertItem) convertItem.style.display = 'block';
-                    if (replaceItem) replaceItem.style.display = 'block';
-                    break;
-                    
-                case 'master':
-                    // For master icons: hide convert, show swap
-                    if (convertItem) convertItem.style.display = 'none';
-                    if (replaceItem) replaceItem.style.display = 'none';
-                    break;
-                    
-                case 'instance':
-                    // For instances: hide convert and replace, show swap
-                    if (convertItem) convertItem.style.display = 'none';
-                    if (replaceItem) replaceItem.style.display = 'none';
-                    break;
-                    
-                default:
-                    // Default: show all options
-                    break;
             }
-            
-            // Always show swap and select
-            if (swapItem) swapItem.style.display = 'block';
-            if (selectItem) selectItem.style.display = 'block';
         }
 
         // Helper function to detect if an icon needs a background (for white/light icons)
@@ -3446,68 +3520,29 @@
         }
 
         // Context Menu Action Handlers
-        function handleContextMenuConvert() {
+        function handleContextMenuIgnore() {
             if (!contextMenuIcon) return;
             
-            // Validate that the icon is still valid for conversion
-            if (contextMenuIcon.status === 'master' || contextMenuIcon.status === 'instance') {
-                showToast(
-                    'Icon Already Converted',
-                    'This icon is already a master component or instance and doesn\'t need to be converted.',
-                    'info',
-                    5000
-                );
+            // Validate that the icon has required properties
+            if (!contextMenuIcon.id || !contextMenuIcon.name) {
+                console.error('Invalid icon data:', contextMenuIcon);
+                showToast('Error', 'Cannot ignore icon - invalid data', 'error', 3000);
                 hideContextMenu();
                 return;
             }
             
             hideContextMenu();
             
-            // Show loading state
-            showToast('Converting Icon...', `Converting "${contextMenuIcon.name}" to component`, 'info', 3000);
-            
-            // Convert single icon to component
+            // Add icon to ignore list
             parent.postMessage({
                 pluginMessage: {
-                    type: 'convert-single-icon',
+                    type: 'ignore-icon',
                     iconId: contextMenuIcon.id,
                     iconName: contextMenuIcon.name
                 }
             }, '*');
-        }
-
-        function handleContextMenuReplace() {
-            if (!contextMenuIcon) return;
             
-            hideContextMenu();
-            
-            // Show replace dialog to select master component
-            showReplaceWithInstanceDialog(contextMenuIcon);
-        }
-
-        function handleContextMenuSwap() {
-            if (!contextMenuIcon) return;
-            
-            hideContextMenu();
-            
-            // Open swap dialog
-            showIconSwapDialog(contextMenuIcon);
-        }
-
-        function handleContextMenuSelect() {
-            if (!contextMenuIcon) return;
-            
-            hideContextMenu();
-            
-            // Select icon on canvas
-            parent.postMessage({ 
-                pluginMessage: { 
-                    type: 'select-icon',
-                    iconId: contextMenuIcon.id 
-                } 
-            }, '*');
-            
-            showToast('Icon Selected', `Selected "${contextMenuIcon.name}" on canvas`, 'success', 3000);
+            showToast('Icon Ignored', `"${contextMenuIcon.name}" will be ignored in future scans`, 'success', 3000);
         }
 
         function showReplaceWithInstanceDialog(icon) {
@@ -3822,21 +3857,42 @@ ${exportData.branding || 'Artificial Lack of Intelligence © 2025'}
         }
 
         function showProgress(show = true) {
-            elements.progress.classList.toggle('show', show);
+            if (elements.progress) {
+                elements.progress.classList.toggle('show', show);
+            }
         }
 
         function updateProgress(percentage) {
-            elements.progressBar.style.width = `${percentage}%`;
+            if (elements.progressBar) {
+                elements.progressBar.style.width = `${percentage}%`;
+            }
+        }
+
+        function resetUIState() {
+            // Hide progress bar
+            showProgress(false);
+            
+            // Reset progress bar width
+            updateProgress(0);
+            
+            // Reset all scan buttons to normal state
+            resetAllScanButtons(false);
+            
+            // Clear any stuck loading states
+            document.querySelectorAll('.loading').forEach(el => {
+                el.classList.remove('loading');
+            });
         }
 
         function updateStats() {
-            // Only count valid, non-deleted, non-archived icons
+            // Only count valid, non-deleted, non-archived, non-ignored icons
             const validIcons = iconData.discoveredIcons ? iconData.discoveredIcons.filter(icon => 
                 icon && 
                 icon.id && 
                 icon.page !== '🗄️ Archived Icons' && 
                 !icon.name.toLowerCase().startsWith('archive/') && 
-                !icon.name.toLowerCase().includes('[archived]')
+                !icon.name.toLowerCase().includes('[archived]') &&
+                !icon.isIgnored // Exclude ignored icons from stats
             ) : [];
             const actualCount = validIcons.length;
             const masterCount = validIcons.filter(icon => icon.status === 'master' || icon.status === 'master-component').length;
@@ -3989,22 +4045,18 @@ ${exportData.branding || 'Artificial Lack of Intelligence © 2025'}
             }
         }
 
-        function getFilteredIcons() {
-            if (!iconData.discoveredIcons) return [];
+        function getFilteredIcons(iconsToFilter = null) {
+            // Use provided icons or default to all valid icons (excluding ignored)
+            const validIcons = iconsToFilter || (iconData.discoveredIcons ? iconData.discoveredIcons.filter(icon => 
+                icon && 
+                icon.id && 
+                icon.page !== '🗄️ Archived Icons' && 
+                !icon.name.toLowerCase().startsWith('archive/') && 
+                !icon.name.toLowerCase().includes('[archived]') &&
+                !icon.isIgnored // Exclude ignored icons from main filtering
+            ) : []);
             
-            return iconData.discoveredIcons.filter((icon, index) => {
-                // First filter out invalid/deleted icons
-                if (!icon || !icon.id) {
-                    return false;
-                }
-                
-                // Always exclude archived icons from all results
-                if (icon.page === '🗄️ Archived Icons' || 
-                    icon.name.toLowerCase().startsWith('archive/') || 
-                    icon.name.toLowerCase().includes('[archived]')) {
-                    return false;
-                }
-                
+            return validIcons.filter((icon, index) => {
                 // Mode-based filtering
                 if (currentMode === 'library') {
                     // Library mode: only show icons from Icon Library page
@@ -4034,19 +4086,81 @@ ${exportData.branding || 'Artificial Lack of Intelligence © 2025'}
                 return { icon, index: originalIndex };
             });
         }
+        
+        function populateIgnoredIcons(ignoredIcons) {
+            const ignoredGrid = document.getElementById('ignoredIconsGrid');
+            if (!ignoredGrid) return;
+            
+            ignoredGrid.innerHTML = '';
+            
+            ignoredIcons.forEach(icon => {
+                const slot = document.createElement('div');
+                slot.className = 'ignored-icon-slot';
+                slot.dataset.iconId = icon.id;
+                
+                const iconPreview = icon.preview 
+                    ? `<img src="${icon.preview}" alt="${icon.name}" style="width: 100%; height: 100%; object-fit: contain;">`
+                    : '<div style="background: #e5e5e5; width: 100%; height: 100%; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #999;">No preview</div>';
+                
+                slot.innerHTML = `
+                    <div class="icon-preview">${iconPreview}</div>
+                    <div class="icon-name">${icon.name}</div>
+                    <button class="restore-button" title="Restore this icon">↩</button>
+                `;
+                
+                // Add click handler for restore button
+                const restoreButton = slot.querySelector('.restore-button');
+                restoreButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    unignoreIcon(icon.id, icon.name);
+                });
+                
+                ignoredGrid.appendChild(slot);
+            });
+        }
+        
+        function unignoreIcon(iconId, iconName) {
+            parent.postMessage({
+                pluginMessage: {
+                    type: 'unignore-icon',
+                    iconId: iconId,
+                    iconName: iconName
+                }
+            }, '*');
+            
+            showToast('Icon Restored', `"${iconName}" has been restored and will appear in future scans`, 'success', 3000);
+        }
 
         function populateIcons() {
-            // Only count valid, non-deleted, non-archived icons
-            const validIcons = iconData.discoveredIcons ? iconData.discoveredIcons.filter(icon => 
+            // Reset UI state to ensure clean display
+            resetUIState();
+            
+            // Separate active and ignored icons
+            const allValidIcons = iconData.discoveredIcons ? iconData.discoveredIcons.filter(icon => 
                 icon && 
                 icon.id && 
                 icon.page !== '🗄️ Archived Icons' && 
                 !icon.name.toLowerCase().startsWith('archive/') && 
                 !icon.name.toLowerCase().includes('[archived]')
             ) : [];
-            const actualCount = validIcons.length;
             
-            if (actualCount === 0) {
+            const activeIcons = allValidIcons.filter(icon => !icon.isIgnored);
+            const ignoredIcons = allValidIcons.filter(icon => icon.isIgnored);
+            
+            // Show ignored icons section if there are any
+            const ignoredSection = document.getElementById('ignoredIconsSection');
+            const ignoredCount = document.getElementById('ignoredIconCount');
+            
+            if (ignoredIcons.length > 0) {
+                ignoredSection.style.display = 'block';
+                ignoredCount.textContent = `${ignoredIcons.length} ignored`;
+                populateIgnoredIcons(ignoredIcons);
+            } else {
+                ignoredSection.style.display = 'none';
+            }
+            
+            // Handle active icons display
+            if (activeIcons.length === 0) {
                 elements.emptyState.style.display = 'block';
                 
                 if (currentMode === 'library') {
@@ -4072,7 +4186,7 @@ ${exportData.branding || 'Artificial Lack of Intelligence © 2025'}
                 return;
             }
 
-            const filteredIcons = getFilteredIcons();
+            const filteredIcons = getFilteredIcons(activeIcons);
             
             if (filteredIcons.length === 0 && searchFilter) {
                 elements.emptyState.style.display = 'block';
@@ -4676,23 +4790,50 @@ ${exportData.branding || 'Artificial Lack of Intelligence © 2025'}
                 icon.status === 'unresolved' || icon.status === 'in-frame'
             ).length;
             
-            // Estimate new components (unique icons by normalized name + size)
-            const uniqueIconKeys = new Set();
+            // More accurate estimate: use the same grouping logic as backend
+            const iconGroups = new Map();
             iconPool.forEach(icon => {
                 if (icon.status === 'unresolved' || icon.status === 'in-frame') {
-                    const normalizedName = icon.name.toLowerCase()
-                        .replace(/[-_\s\.]/g, '')
-                        .replace(/\d+/g, '')
-                        .replace(/(icon|svg|vector|graphic|outline|filled|solid)/g, '')
-                        .replace(/[^a-z]/g, '');
+                    let normalizedName;
+                    
+                    // Handle library-style names (e.g., "lucide/ellipse") - same logic as backend
+                    const libraryPattern = /^([a-zA-Z0-9-_]+)\/(.+)$/;
+                    const libraryMatch = icon.name.match(libraryPattern);
+                    
+                    if (libraryMatch) {
+                        // For library-style names, preserve the library part and normalize the icon part
+                        const [, libraryName, iconName] = libraryMatch;
+                        const normalizedIconName = iconName.toLowerCase()
+                            .replace(/[-_\s\.]/g, '')
+                            .replace(/\d+/g, '')
+                            .replace(/(icon|svg|vector|graphic|outline|filled|solid)/g, '')
+                            .replace(/[^a-z]/g, '');
+                        normalizedName = `${libraryName.toLowerCase()}/${normalizedIconName}`;
+                    } else {
+                        // For non-library names, use the existing normalization
+                        normalizedName = icon.name.toLowerCase()
+                            .replace(/[-_\s\.]/g, '')
+                            .replace(/\d+/g, '')
+                            .replace(/(icon|svg|vector|graphic|outline|filled|solid)/g, '')
+                            .replace(/[^a-z]/g, '');
+                    }
+                    
                     const sizeGroup = `${Math.round(icon.width/8)*8}x${Math.round(icon.height/8)*8}`;
-                    const key = `${normalizedName}_${sizeGroup}_${icon.source}`;
-                    uniqueIconKeys.add(key);
+                    // Include page in group key to prevent cross-page consolidation of different icons
+                    const groupKey = `${normalizedName}_${sizeGroup}_${icon.source}_${icon.page}`;
+                    
+                    if (!iconGroups.has(groupKey)) {
+                        iconGroups.set(groupKey, []);
+                    }
+                    iconGroups.get(groupKey).push(icon);
                 }
             });
             
+            // Each group becomes one component - this matches the backend logic
+            const estimatedComponents = iconGroups.size;
+            
             replaceableIconsEl.textContent = replaceableIcons;
-            newComponentsEl.textContent = uniqueIconKeys.size;
+            newComponentsEl.textContent = estimatedComponents;
         }
 
         function selectScopeOption(selectedScope) {
@@ -5783,6 +5924,8 @@ ${exportData.branding || 'Artificial Lack of Intelligence © 2025'}
             }, '*');
         });
 
+                // Diagnostic mode removed
+
         // Legacy scan button (if it exists)
         if (elements.scanButton) {
             elements.scanButton.addEventListener('click', () => {
@@ -6073,6 +6216,8 @@ ${exportData.branding || 'Artificial Lack of Intelligence © 2025'}
                     updateProgress(data.percentage);
                     break;
                     
+                            // Diagnostic mode removed
+                    
                 case 'page-changed-scanning':
                     // Show that we're automatically scanning due to page change
                     showProgress(true);
@@ -6360,6 +6505,51 @@ ${exportData.branding || 'Artificial Lack of Intelligence © 2025'}
                     showStatus('Error setting up Figma AI rename: ' + (data.error || 'Unknown error'), 'error');
                     break;
 
+                case 'icon-ignored':
+                    // Remove the ignored icon from the current display
+                    if (iconData.discoveredIcons) {
+                        iconData.discoveredIcons = iconData.discoveredIcons.filter(icon => icon.id !== data.iconId);
+                        iconData.totalIcons = iconData.discoveredIcons.length;
+                    }
+                    
+                    // Refresh the icon display
+                    populateIcons();
+                    
+                    // Update stats
+                    updateStats();
+                    
+                    // Show success message
+                    showStatus(data.message || 'Icon ignored successfully', 'success');
+                    break;
+                    
+                case 'ignore-icon-error':
+                    showStatus('Error ignoring icon: ' + (data.error || 'Unknown error'), 'error');
+                    break;
+                    
+                case 'icon-unignored':
+                    // Remove the ignored icon from the ignored section and add it back to main display
+                    if (iconData.discoveredIcons) {
+                        // Find the icon and mark it as not ignored
+                        const icon = iconData.discoveredIcons.find(icon => icon.id === data.iconId);
+                        if (icon) {
+                            icon.isIgnored = false;
+                        }
+                    }
+                    
+                    // Refresh the icon display
+                    populateIcons();
+                    
+                    // Update stats
+                    updateStats();
+                    
+                    // Show success message
+                    showStatus(data.message || 'Icon restored successfully', 'success');
+                    break;
+                    
+                case 'unignore-icon-error':
+                    showStatus('Error restoring icon: ' + (data.error || 'Unknown error'), 'error');
+                    break;
+                    
                 case 'icon-swap-complete':
                     const swapMessage = data.message || 'Icons swapped successfully';
                     const instancesUpdated = data.instancesUpdated || 0;
@@ -6637,22 +6827,10 @@ ${exportData.branding || 'Artificial Lack of Intelligence © 2025'}
         
         // Context Menu Event Listeners
         const setupContextMenuListeners = () => {
-            const convertBtn = document.getElementById('contextMenuConvert');
-            const replaceBtn = document.getElementById('contextMenuReplace');
-            const swapBtn = document.getElementById('contextMenuSwap');
-            const selectBtn = document.getElementById('contextMenuSelect');
+            const ignoreBtn = document.getElementById('contextMenuIgnore');
             
-            if (convertBtn) {
-                convertBtn.addEventListener('click', handleContextMenuConvert);
-            }
-            if (replaceBtn) {
-                replaceBtn.addEventListener('click', handleContextMenuReplace);
-            }
-            if (swapBtn) {
-                swapBtn.addEventListener('click', handleContextMenuSwap);
-            }
-            if (selectBtn) {
-                selectBtn.addEventListener('click', handleContextMenuSelect);
+            if (ignoreBtn) {
+                ignoreBtn.addEventListener('click', handleContextMenuIgnore);
             }
         };
         
